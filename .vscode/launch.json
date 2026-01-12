@@ -1,0 +1,30 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "default Launch ioBroker Adapter ",
+            "skipFiles": ["<node_internals>/**"],
+            "args": ["--debug", "0"],
+            "program": "node_modules/iobroker.med-plan/main.js",
+            "cwd": "${workspaceFolder}/.dev-server/default",
+            "stopOnEntry": false,
+            "sourceMaps": true,
+            "console": "internalConsole",
+            "outputCapture": "std",
+            "resolveSourceMapLocations": ["${workspaceFolder}/**" /* , "!*node_modules/**" */]
+        },
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "iobroker web",
+            "url": "http://localhost:8081/#tab-med-plan",
+            "trace": true,
+            "skipFiles": ["socket.io.js"]
+        }
+    ]
+}

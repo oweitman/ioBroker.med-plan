@@ -1,0 +1,104 @@
+{
+    "common": {
+        "name": "med-plan",
+        "version": "0.0.1",
+        "news": {
+            "0.0.1": {
+                "en": "initial release",
+                "de": "Erstveröffentlichung",
+                "ru": "Начальная версия",
+                "pt": "lançamento inicial",
+                "nl": "Eerste uitgave",
+                "fr": "Première version",
+                "it": "Versione iniziale",
+                "es": "Versión inicial",
+                "pl": "Pierwsze wydanie",
+                "uk": "Початкова версія",
+                "zh-cn": "首次出版"
+            }
+        },
+        "titleLang": {
+            "en": "med-plan",
+            "de": "Med-Plan",
+            "ru": "медицинский план",
+            "pt": "plano médico",
+            "nl": "Med-plan",
+            "fr": "plan médical",
+            "it": "piano medico",
+            "es": "plan médico",
+            "pl": "plan medyczny",
+            "uk": "мед-план",
+            "zh-cn": "医疗计划"
+        },
+        "desc": {
+            "en": "An application to support regular medication intake.",
+            "de": "Eine Anwendung zur Unterstützung der regelmäßigen Medikamenteneinnahme.",
+            "ru": "Приложение для поддержки регулярного приема лекарств.",
+            "pt": "Um aplicativo para apoiar a ingestão regular de medicamentos.",
+            "nl": "Een applicatie ter ondersteuning van de reguliere medicatie-inname.",
+            "fr": "Une application pour soutenir la prise régulière de médicaments.",
+            "it": "Un'applicazione per supportare l'assunzione regolare di farmaci.",
+            "es": "Una aplicación para apoyar la ingesta regular de medicamentos.",
+            "pl": "Aplikacja wspierająca regularne przyjmowanie leków.",
+            "uk": "Додаток для підтримки регулярного прийому ліків.",
+            "zh-cn": "支持定期服药的应用程序。"
+        },
+        "authors": ["oweitman <oweitman@gmx.de>"],
+        "keywords": ["iobroker", "medication", "medication-plan", "medicine", "reminder", "schedule", "tracker"],
+        "licenseInformation": {
+            "type": "free",
+            "license": "MIT"
+        },
+        "platform": "Javascript/Node.js",
+        "icon": "med-plan.png",
+        "enabled": true,
+        "extIcon": "https://raw.githubusercontent.com/oweitman/ioBroker.med-plan/main/admin/med-plan.png",
+        "readme": "https://github.com/oweitman/ioBroker.med-plan/blob/main/README.md",
+        "loglevel": "info",
+        "tier": 3,
+        "messagebox": true,
+        "mode": "daemon",
+        "type": "health",
+        "compact": true,
+        "connectionType": "local",
+        "dataSource": "assumption",
+        "adminUI": {
+            "config": "materialize",
+            "tab": "materialize"
+        },
+        "adminTab": {
+            "singleton": true,
+            "name": {
+                "en": "med-plan",
+                "de": "Med-Plan",
+                "ru": "медицинский план",
+                "pt": "plano médico",
+                "nl": "Med-plan",
+                "fr": "plan médical",
+                "it": "piano medico",
+                "es": "plan médico",
+                "pl": "plan medyczny",
+                "uk": "мед-план",
+                "zh-cn": "医疗计划"
+            },
+            "link": ""
+        },
+        "eraseOnUpload": true,
+        "dependencies": [
+            {
+                "js-controller": ">=6.0.11"
+            }
+        ],
+        "globalDependencies": [
+            {
+                "admin": ">=7.0.23"
+            }
+        ]
+    },
+    "native": {
+        "option1": true,
+        "option2": "42"
+    },
+    "objects": [],
+    "instanceObjects": []
+}
