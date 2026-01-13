@@ -1,6 +1,6 @@
 {
   "name": "iobroker.med-plan",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "An application to support regular medication intake.",
   "author": {
     "name": "oweitman",
