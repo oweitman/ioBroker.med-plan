@@ -154,6 +154,13 @@ Please refer to the [`dev-server` documentation](https://github.com/ioBroker/dev
 
 - automaticly create patients from iobroker users
 - trigger reminders for doses and other events (ordering)
+- Medikament aus Medikamentendatenbank suchen <https://portal.dimdi.de/amguifree/?accessid=amis_off_am_ppv&lang=de>
+- Medikamenteninformation mit welchen Wirkstoffen. ggfs. Link auf Datenbank
+- Welcher Arzt hat verschrieben
+- Bruchteildosen
+- Notitzfeld je Medikament
+- Notitz je Einnahme
+- Veränderung der Dosis über die Zeit je Medikament
 
 ## Changelog
 
