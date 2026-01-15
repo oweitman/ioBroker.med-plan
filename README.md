@@ -148,7 +148,7 @@ Please refer to the [`dev-server` documentation](https://github.com/ioBroker/dev
 - Optional definition of custom/additional slots
 - More options for intake schedule
 - Optional expansion of medication tracking with detailed information
-- Translation
+- ok, Translation
 
 ## Feature requests
 
