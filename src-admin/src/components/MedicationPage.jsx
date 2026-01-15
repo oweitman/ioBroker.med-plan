@@ -17,7 +17,7 @@ import LocalPharmacyIcon from '@mui/icons-material/LocalPharmacy';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 
-import { I18n } from '@iobroker/adapter-react-v5';
+import { t } from '../components/i18n';
 
 /**
  * @param {{
@@ -55,7 +55,7 @@ export default function MedicationPage(props) {
                 gutterBottom
                 sx={classes.textPrimary}
             >
-                {I18n.t('Medication')}
+                {t('Medication')}
             </Typography>
 
             <Typography
@@ -63,7 +63,7 @@ export default function MedicationPage(props) {
                 gutterBottom
                 sx={classes.textSecondary}
             >
-                {I18n.t('Create new medications (name only for now).')}
+                {t('Create new medications (name only for now).')}
             </Typography>
 
             <Grid
@@ -73,7 +73,7 @@ export default function MedicationPage(props) {
             >
                 <Grid size={{ xs: 12, md: 6 }}>
                     <TextField
-                        label={I18n.t('Medication name')}
+                        label={t('Medication name')}
                         value={newMedicationName}
                         onChange={e => setNewMedicationName(e.target.value)}
                         onKeyDown={onKeyDown}
@@ -92,7 +92,7 @@ export default function MedicationPage(props) {
                         onClick={add}
                         disabled={!newMedicationName.trim()}
                     >
-                        {I18n.t('Add')}
+                        {t('Add')}
                     </Button>
                 </Grid>
             </Grid>
@@ -103,7 +103,7 @@ export default function MedicationPage(props) {
                     gutterBottom
                     sx={classes.textPrimary}
                 >
-                    {I18n.t('Existing medications')}
+                    {t('Existing medications')}
                 </Typography>
 
                 {medications.length === 0 ? (
@@ -111,7 +111,7 @@ export default function MedicationPage(props) {
                         variant="body2"
                         sx={classes.textSecondary}
                     >
-                        {I18n.t('No medications yet.')}
+                        {t('No medications yet.')}
                     </Typography>
                 ) : (
                     <Paper
@@ -136,7 +136,7 @@ export default function MedicationPage(props) {
                                     <ListItemSecondaryAction>
                                         <IconButton
                                             edge="end"
-                                            aria-label={I18n.t('Delete medication')}
+                                            aria-label={t('Delete medication')}
                                             onClick={() => onDelete(m.id)}
                                         >
                                             <DeleteIcon />

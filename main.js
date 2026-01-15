@@ -89,6 +89,7 @@ class MedPlan extends utils.Adapter {
      * @param {ioBroker.Message} obj message object
      */
     async onMessage(obj) {
+        this.log.debug(`onMessage ${obj}`);
         medplanserver.processMessages(obj);
     }
     async ensureJsonState(id, name) {

@@ -19,7 +19,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import PersonIcon from '@mui/icons-material/Person';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 
-import { I18n } from '@iobroker/adapter-react-v5';
+import { t } from '../components/i18n';
 
 /**
  * @typedef {object} SettingsProps
@@ -80,17 +80,6 @@ const styles = theme => ({
         color: theme.palette.text.primary,
     },
 });
-
-/**
- * @param {string} key
- */
-const t = key => I18n.t(/** @type {any} */ (key));
-
-/**
- * Minimal data model on native:
- * native.patients: Array<{ id: string, name: string }>
- * native.medications: Array<{ id: string, name: string }>
- */
 
 /**
  * @param {SettingsProps} props
@@ -188,7 +177,7 @@ function MedPlan(props) {
                         gutterBottom
                         sx={classes.textPrimary}
                     >
-                        {I18n.t('med-plan')}
+                        {t('med-plan')}
                     </Typography>
 
                     <Typography
@@ -207,34 +196,32 @@ function MedPlan(props) {
                             gutterBottom
                             sx={classes.textPrimary}
                         >
-                            {I18n.t('How to use')}
+                            {t('How to use')}
                         </Typography>
 
                         <Typography
                             variant="body2"
                             sx={classes.textSecondary}
                         >
-                            {I18n.t('1) Open “Medication” to add or remove medications.')}
+                            {t('1) Open “Medication” to add or remove medications.')}
                         </Typography>
                         <Typography
                             variant="body2"
                             sx={classes.textSecondary}
                         >
-                            {I18n.t('2) Open “New patient” to create a patient entry.')}
+                            {t('2) Open “New patient” to create a patient entry.')}
                         </Typography>
                         <Typography
                             variant="body2"
                             sx={classes.textSecondary}
                         >
-                            {I18n.t(
-                                '3) Patients appear in the left menu. Click a patient to open details (coming later).',
-                            )}
+                            {t('3) Patients appear in the left menu. Click a patient to open details (coming later).')}
                         </Typography>
                         <Typography
                             variant="body2"
                             sx={classes.textSecondary}
                         >
-                            {I18n.t('Tip: You can press Enter in the name fields to add an item quickly.')}
+                            {t('Tip: You can press Enter in the name fields to add an item quickly.')}
                         </Typography>
                     </Box>
                 </Box>
@@ -249,7 +236,7 @@ function MedPlan(props) {
                         gutterBottom
                         sx={classes.textPrimary}
                     >
-                        {I18n.t('Medication')}
+                        {t('Medication')}
                     </Typography>
 
                     <Typography
@@ -257,12 +244,12 @@ function MedPlan(props) {
                         gutterBottom
                         sx={classes.textSecondary}
                     >
-                        {I18n.I18n.t('Create new medications (name only for now).')}
+                        {t('Create new medications (name only for now).')}
                     </Typography>
 
                     <Box sx={classes.formRow}>
                         <TextField
-                            label={I18n.t('Medication name')}
+                            label={t('Medication name')}
                             value={newMedicationName}
                             onChange={e => setNewMedicationName(e.target.value)}
                             onKeyDown={onMedicationKeyDown}
@@ -277,7 +264,7 @@ function MedPlan(props) {
                             onClick={addMedication}
                             disabled={!newMedicationName.trim()}
                         >
-                            {I18n.t('Add')}
+                            {t('Add')}
                         </Button>
                     </Box>
 
@@ -287,7 +274,7 @@ function MedPlan(props) {
                             gutterBottom
                             sx={classes.textPrimary}
                         >
-                            {I18n.t('Existing medications')}
+                            {t('Existing medications')}
                         </Typography>
 
                         {medications.length === 0 ? (
@@ -295,7 +282,7 @@ function MedPlan(props) {
                                 variant="body2"
                                 sx={classes.textSecondary}
                             >
-                                {I18n.t('No medications yet.')}
+                                {t('No medications yet.')}
                             </Typography>
                         ) : (
                             <List dense>
@@ -313,7 +300,7 @@ function MedPlan(props) {
                                         <ListItemSecondaryAction>
                                             <IconButton
                                                 edge="end"
-                                                aria-label={I18n.t('Delete medication')}
+                                                aria-label={t('Delete medication')}
                                                 onClick={() => deleteMedication(m.id)}
                                             >
                                                 <DeleteIcon />
@@ -336,7 +323,7 @@ function MedPlan(props) {
                         gutterBottom
                         sx={classes.textPrimary}
                     >
-                        {I18n.t('New patient')}
+                        {t('New patient')}
                     </Typography>
 
                     <Typography
@@ -344,12 +331,12 @@ function MedPlan(props) {
                         gutterBottom
                         sx={classes.textSecondary}
                     >
-                        {I18n.t('Create a new patient (name only for now).')}
+                        {t('Create a new patient (name only for now).')}
                     </Typography>
 
                     <Box sx={classes.formRow}>
                         <TextField
-                            label={I18n.t('Patient name')}
+                            label={t('Patient name')}
                             value={newPatientName}
                             onChange={e => setNewPatientName(e.target.value)}
                             onKeyDown={onPatientKeyDown}
@@ -364,7 +351,7 @@ function MedPlan(props) {
                             onClick={addPatient}
                             disabled={!newPatientName.trim()}
                         >
-                            {I18n.t('Add')}
+                            {t('Add')}
                         </Button>
                     </Box>
 
@@ -374,7 +361,7 @@ function MedPlan(props) {
                             gutterBottom
                             sx={classes.textPrimary}
                         >
-                            {I18n.t('Existing patients')}
+                            {t('Existing patients')}
                         </Typography>
 
                         {patients.length === 0 ? (
@@ -415,7 +402,7 @@ function MedPlan(props) {
                         gutterBottom
                         sx={classes.textPrimary}
                     >
-                        {patient ? patient.name : I18n.t('Patient')}
+                        {patient ? patient.name : t('Patient')}
                     </Typography>
 
                     <Typography
@@ -423,7 +410,7 @@ function MedPlan(props) {
                         gutterBottom
                         sx={classes.textSecondary}
                     >
-                        {I18n.t('Patient details will be implemented later.')}
+                        {t('Patient details will be implemented later.')}
                     </Typography>
 
                     {patient ? (
@@ -432,7 +419,7 @@ function MedPlan(props) {
                                 variant="body2"
                                 sx={classes.textPrimary}
                             >
-                                <strong>{I18n.t('ID')}:</strong> {patient.id}
+                                <strong>{t('ID')}:</strong> {patient.id}
                             </Typography>
                         </Box>
                     ) : null}
@@ -440,7 +427,7 @@ function MedPlan(props) {
             );
         }
 
-        return <Typography sx={classes.textPrimary}>{I18n.t('Select an item from the menu.')}</Typography>;
+        return <Typography sx={classes.textPrimary}>{t('Select an item from the menu.')}</Typography>;
     };
 
     return (
@@ -454,7 +441,7 @@ function MedPlan(props) {
                     sx={classes.sectionTitle}
                     variant="subtitle2"
                 >
-                    {I18n.t('Medication Plan')}
+                    {t('Medication Plan')}
                 </Typography>
 
                 <List>
@@ -468,7 +455,7 @@ function MedPlan(props) {
                                 <InfoOutlinedIcon />
                             </ListItemIcon>
                             <ListItemText
-                                primary={I18n.t('med-plan')}
+                                primary={t('med-plan')}
                                 sx={{ primary: classes.listItemText }}
                             />
                         </ListItemButton>
@@ -484,7 +471,7 @@ function MedPlan(props) {
                                 <LocalPharmacyIcon />
                             </ListItemIcon>
                             <ListItemText
-                                primary={I18n.t('Medication')}
+                                primary={t('Medication')}
                                 sx={{ primary: classes.listItemText }}
                             />
                         </ListItemButton>
@@ -500,7 +487,7 @@ function MedPlan(props) {
                                 <PersonAddIcon />
                             </ListItemIcon>
                             <ListItemText
-                                primary={I18n.t('New patient')}
+                                primary={t('New patient')}
                                 sx={{ primary: classes.listItemText }}
                             />
                         </ListItemButton>
@@ -513,15 +500,15 @@ function MedPlan(props) {
                     sx={classes.sectionTitle}
                     variant="subtitle2"
                 >
-                    {I18n.t('Patients')}
+                    {t('Patients')}
                 </Typography>
 
                 <List>
                     {patients.length === 0 ? (
                         <ListItem>
                             <ListItemText
-                                primary={I18n.t('No patients')}
-                                secondary={I18n.t('Create a patient first.')}
+                                primary={t('No patients')}
+                                secondary={t('Create a patient first.')}
                                 sx={{ primary: classes.listItemText }}
                             />
                         </ListItem>
@@ -533,7 +520,7 @@ function MedPlan(props) {
                                 secondaryAction={
                                     <IconButton
                                         edge="end"
-                                        aria-label={I18n.t('Delete patient')}
+                                        aria-label={t('Delete patient')}
                                         onClick={e => {
                                             e.preventDefault();
                                             e.stopPropagation();

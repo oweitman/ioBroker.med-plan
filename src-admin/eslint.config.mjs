@@ -23,10 +23,11 @@ export default [
     {
         // disable temporary the rule 'jsdoc/require-param' and enable 'jsdoc/require-jsdoc'
         rules: {
-            'jsdoc/require-jsdoc': 'off',
-            'jsdoc/require-param': 'off',
+            'jsdoc/require-jsdoc': 'warn',
+            'jsdoc/require-param': 'warn',
             '@/no-duplicate-imports': 'error',
-            'react/react-in-jsx-scope': 'off',
+            'react/react-in-jsx-scope': 'warn',
+            'import/no-unresolved': 'error',
         },
     },
     {

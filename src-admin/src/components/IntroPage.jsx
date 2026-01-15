@@ -2,7 +2,8 @@
 import React from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import { I18n } from '@iobroker/adapter-react-v5';
+
+import { t } from '../components/i18n';
 
 export default function IntroPage(props) {
     const { classes } = props;
@@ -14,7 +15,7 @@ export default function IntroPage(props) {
                 gutterBottom
                 sx={classes.textPrimary}
             >
-                {I18n.t('med-plan')}
+                {t('Medication Plan Administration')}
             </Typography>
 
             <Typography
@@ -22,7 +23,7 @@ export default function IntroPage(props) {
                 gutterBottom
                 sx={classes.textPrimary}
             >
-                {I18n.t(
+                {t(
                     'This page lets you manage a simple medication list and create patients. Patient details and schedules will be added later.',
                 )}
             </Typography>
@@ -33,32 +34,32 @@ export default function IntroPage(props) {
                     gutterBottom
                     sx={classes.textPrimary}
                 >
-                    {I18n.t('How to use')}
+                    {t('How to use')}
                 </Typography>
 
                 <Typography
                     variant="body2"
                     sx={classes.textSecondary}
                 >
-                    {I18n.t('1) Open “Medication” to add or remove medications.')}
+                    {t('1) Open “Medication” to add or remove medications.')}
                 </Typography>
                 <Typography
                     variant="body2"
                     sx={classes.textSecondary}
                 >
-                    {I18n.t('2) Open “New patient” to create a patient entry.')}
+                    {t('2) Open “New patient” to create a patient entry.')}
                 </Typography>
                 <Typography
                     variant="body2"
                     sx={classes.textSecondary}
                 >
-                    {I18n.t('3) Patients appear in the left menu. Click a patient to open details (coming later).')}
+                    {t('3) Patients appear in the left menu. Click a patient to open details (coming later).')}
                 </Typography>
                 <Typography
                     variant="body2"
                     sx={classes.textSecondary}
                 >
-                    {I18n.t('Tip: You can press Enter in the name fields to add an item quickly.')}
+                    {t('Tip: You can press Enter in the name fields to add an item quickly.')}
                 </Typography>
             </Box>
         </Box>

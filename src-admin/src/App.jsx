@@ -45,11 +45,11 @@ class App extends GenericApp {
             uk: ukLang,
             'zh-cn': zhCnLang,
         };
-        extendedProps.sentryDSN = window.sentryDSN;
         super(props, extendedProps);
 
         const theme = this.createTheme();
         this.state = {
+            ...this.state, // <-- wichtig: GenericApp-State nicht verlieren
             theme,
             themeName: this.getThemeName(theme),
             themeType: this.getThemeType(theme),

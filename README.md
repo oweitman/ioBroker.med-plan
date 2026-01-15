@@ -133,15 +133,15 @@ Please refer to the [`dev-server` documentation](https://github.com/ioBroker/dev
 
 ## todo
 
-- Adapter automatically detects missed doses
-- Record the exact time of each dose
-- Vis widgets are also available for dark mode
-- Add missing data from the current data model to widgets
-- Note function for missed doses
+- ok, Adapter automatically detects missed doses
+- OK, Record the exact time of each dose
+- ok, Vis widgets are also available for dark mode
+- ok, Add missing data from the current data model to widgets
+- ok Note function for missed doses
 - More layout options
 - Calculate dose reliability
 - Report output
-- Count function for remaining contents of a pack
+- ok,Count function for remaining contents of a pack
 - Reorder reminder function
 - Correct the contents of a pack (lost/thrown away)
 - Custom definition of time slots for morning, noon, evening, and night
@@ -161,6 +161,7 @@ Please refer to the [`dev-server` documentation](https://github.com/ioBroker/dev
 - Notitzfeld je Medikament
 - Notitz je Einnahme
 - Veränderung der Dosis über die Zeit je Medikament
+- Als Slot noch bei Bedarf ergänzen. Wenn im widget gedrückt wird, wird mehrfach die einnahme aufgezeichnet.
 
 ## Changelog
 

@@ -1,0 +1,19 @@
+{
+  "name": "medplanvis1widget",
+  "version": "2.0.0",
+  "main": "med-plan/js/med-plan.js",
+  "type": "module",
+  "watch": {
+      "build": "med-plan/**/js/*.js"
+  },
+  "scripts": {
+    "build": "esbuild med-plan/js/bundle.js --minify --bundle --outfile=med-plan/build/med-plan-dist.js --target=es6 --sourcemap",
+    "watch": "npm-watch"
+  },
+  "author": "",
+  "license": "MIT",
+  "description": "",
+  "dependencies": {
+    "npm-watch": "^0.13.0"
+  }
+}

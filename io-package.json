@@ -1,7 +1,7 @@
 {
     "common": {
         "name": "med-plan",
-        "version": "0.0.3",
+        "version": "0.0.4",
         "news": {
             "0.0.1": {
                 "en": "initial release",
@@ -50,9 +50,9 @@
             "license": "MIT"
         },
         "platform": "Javascript/Node.js",
-        "icon": "med-plan.png",
+        "icon": "med-plan.svg",
         "enabled": true,
-        "extIcon": "https://raw.githubusercontent.com/oweitman/ioBroker.med-plan/main/admin/med-plan.png",
+        "extIcon": "https://raw.githubusercontent.com/oweitman/ioBroker.med-plan/main/admin/med-plan.svg",
         "readme": "https://github.com/oweitman/ioBroker.med-plan/blob/main/README.md",
         "loglevel": "info",
         "tier": 3,

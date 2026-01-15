@@ -4,7 +4,12 @@
  * MIT License
  *
  */
-const { deleteFoldersRecursive, buildReact, npmInstall, copyFiles, patchHtmlFile } = require('@iobroker/build-tools');
+const {
+    deleteFoldersRecursive,
+    buildReact,
+    npmInstall,
+    copyFiles /* , patchHtmlFile */,
+} = require('@iobroker/build-tools');
 const { copyFileSync, existsSync } = require('node:fs');
 const fs = require('node:fs');
 
@@ -43,8 +48,10 @@ async function copyAllFiles() {
 function patchFiles() {
     if (fs.existsSync(`${__dirname}/src/build/index.html`)) {
         let code = fs.readFileSync(`${__dirname}/src/build/index.html`).toString('utf8');
-        code = code.replace(/<script>var script=document\.createElement\("script"\)[^<]+<\/script>/,
-            `<script type="text/javascript" src="./../../lib/js/socket.io.js"></script>`);
+        code = code.replace(
+            /<script>var script=document\.createElement\("script"\)[^<]+<\/script>/,
+            `<script type="text/javascript" src="./../../lib/js/socket.io.js"></script>`,
+        );
 
         fs.existsSync(`${__dirname}/admin/tab_m.html`) && fs.unlinkSync(`${__dirname}/admin/tab_m.html`);
         fs.writeFileSync(`${__dirname}/admin/tab_m.html`, code);
@@ -76,11 +83,9 @@ function clean() {
 if (process.argv.includes('--admin-0-clean')) {
     cleanAdmin();
 } else if (process.argv.includes('--admin-1-npm')) {
-    npmInstall(`${__dirname}/src-admin/`)
-        .catch(e => console.error(e));
+    npmInstall(`${__dirname}/src-admin/`).catch(e => console.error(e));
 } else if (process.argv.includes('--admin-2-compile')) {
-    buildAdmin()
-        .catch(e => console.error(e));
+    buildAdmin().catch(e => console.error(e));
 } else if (process.argv.includes('--admin-3-copy')) {
     copyAllAdminFiles();
 } else if (process.argv.includes('--admin-build')) {

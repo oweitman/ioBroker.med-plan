@@ -1,23 +1,96 @@
-/* Inline error */
+/* ==========================================================================
+   med-plan widget stylesheet (theme-adaptive)
+   - Derives neutrals from currentColor (inherits user theme foreground)
+   - Keeps green/red accents but allows override via CSS variables
+   - Includes fallback for environments without color-mix()
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Theme adapter / variables
+   -------------------------------------------------------------------------- */
+.med-plan-root,
+.mp-day-card,
+.mp-day {
+    color: inherit;
+
+    /* Accent colors (overrideable by user) */
+    --mp-ok: #2e7d32;
+    --mp-bad: #d32f2f;
+
+    /* Neutral surfaces derived from currentColor */
+    --mp-border: color-mix(in srgb, currentColor 22%, transparent);
+    --mp-border-soft: color-mix(in srgb, currentColor 14%, transparent);
+    --mp-surface: color-mix(in srgb, currentColor 4%, transparent);
+    --mp-surface-2: color-mix(in srgb, currentColor 6%, transparent);
+    --mp-muted: color-mix(in srgb, currentColor 65%, transparent);
+
+    /* State surfaces */
+    --mp-ok-bg: color-mix(in srgb, var(--mp-ok) 18%, transparent);
+    --mp-ok-border: color-mix(in srgb, var(--mp-ok) 40%, transparent);
+    --mp-bad-bg: color-mix(in srgb, var(--mp-bad) 16%, transparent);
+    --mp-bad-border: color-mix(in srgb, var(--mp-bad) 40%, transparent);
+}
+
+/* Fallback for environments without color-mix() support */
+@supports not (color: color-mix(in srgb, black 10%, transparent)) {
+    .med-plan-root,
+    .mp-day-card,
+    .mp-day {
+        --mp-border: rgba(0, 0, 0, 0.18);
+        --mp-border-soft: rgba(0, 0, 0, 0.12);
+        --mp-surface: rgba(0, 0, 0, 0.02);
+        --mp-surface-2: rgba(0, 0, 0, 0.03);
+        --mp-muted: rgba(0, 0, 0, 0.55);
+
+        --mp-ok: #2e7d32;
+        --mp-bad: #d32f2f;
+        --mp-ok-bg: rgba(46, 125, 50, 0.18);
+        --mp-ok-border: rgba(46, 125, 50, 0.35);
+        --mp-bad-bg: rgba(211, 47, 47, 0.16);
+        --mp-bad-border: rgba(211, 47, 47, 0.35);
+    }
+}
+
+/* --------------------------------------------------------------------------
+   Inline error
+   -------------------------------------------------------------------------- */
 .mp-inline-error {
     margin-bottom: 6px;
     padding: 6px 8px;
-    border: 1px solid rgba(211, 47, 47, 0.35);
-    background: rgba(211, 47, 47, 0.1);
+    border: 1px solid var(--mp-bad-border);
+    background: var(--mp-bad-bg);
     border-radius: 10px;
     font-size: 12px;
 }
 
-/* One rounded frame per day */
+/* --------------------------------------------------------------------------
+   One rounded frame per day (legacy class)
+   -------------------------------------------------------------------------- */
 .mp-day {
-    border: 1px solid rgba(0, 0, 0, 0.18);
+    border: 1px solid var(--mp-border);
     border-radius: 14px;
     padding: 10px;
-    background: rgba(0, 0, 0, 0.02);
+    background: var(--mp-surface);
     margin: 10px 0;
 }
 
-/* Header inside the day frame */
+/* One card per day: border, spacing, subtle background */
+.mp-day-card {
+    border: 1px solid var(--mp-border);
+    border-radius: 14px;
+    padding: 10px;
+    margin: 10px 0;
+    background: var(--mp-surface);
+}
+
+/* Optional: slightly stronger separation in multiday lists */
+.med-plan-root--multiday .mp-day-card {
+    margin: 12px 0;
+}
+
+/* --------------------------------------------------------------------------
+   Header inside the day frame
+   -------------------------------------------------------------------------- */
 .mp-day-header {
     display: flex;
     align-items: baseline;
@@ -37,7 +110,14 @@
     white-space: nowrap;
 }
 
-/* The four slots inside the day frame */
+/* Ensure header lines are not too tall */
+.med-plan-header div {
+    line-height: 1.2em;
+}
+
+/* --------------------------------------------------------------------------
+   Slots grid
+   -------------------------------------------------------------------------- */
 .mp-slots {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -46,10 +126,10 @@
 
 /* Slot panels inside the day frame (optional, light separation) */
 .mp-slot {
-    border: 1px solid rgba(0, 0, 0, 0.12);
+    border: 1px solid var(--mp-border-soft);
     border-radius: 12px;
     padding: 8px;
-    background: rgba(0, 0, 0, 0.015);
+    background: var(--mp-surface);
 }
 
 .mp-slot-head {
@@ -65,12 +145,17 @@
     opacity: 0.85;
 }
 
+/* Icons: inherit from currentColor */
 .mp-ic {
     width: 22px;
     height: 22px;
-    fill: rgba(0, 0, 0, 0.7);
+    fill: currentColor;
+    opacity: 0.75;
 }
 
+/* --------------------------------------------------------------------------
+   Rows / meds
+   -------------------------------------------------------------------------- */
 .mp-row {
     display: flex;
     align-items: center;
@@ -93,13 +178,15 @@
     padding: 6px 0;
 }
 
-/* Icon button (touch friendly) */
+/* --------------------------------------------------------------------------
+   Icon button (touch friendly)
+   -------------------------------------------------------------------------- */
 .mp-btn {
     width: 44px;
     height: 44px;
     border-radius: 10px;
-    border: 1px solid rgba(0, 0, 0, 0.18);
-    background: rgba(0, 0, 0, 0.02);
+    border: 1px solid var(--mp-border);
+    background: var(--mp-surface);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -107,58 +194,83 @@
     user-select: none;
     -webkit-tap-highlight-color: transparent;
     padding: 0;
+    color: currentColor;
 }
-.mp-btn--busy {
-    opacity: 0.7;
-    cursor: wait;
-}
-.mp-btn:disabled {
-    pointer-events: none;
-}
-/* Busy button state (optional) */
+
 .mp-btn--busy {
     opacity: 0.75;
     cursor: wait;
 }
 
+.mp-btn:disabled {
+    pointer-events: none;
+}
+
+/* Disabled button */
 .mp-btn--disabled {
-    background: rgba(0, 0, 0, 0.02);
-    border-color: rgba(0, 0, 0, 0.18);
+    background: var(--mp-surface);
+    border-color: var(--mp-border);
     cursor: default;
+    opacity: 0.55;
 }
 
-.mp-btn--disabled .mp-ic {
-    fill: rgba(0, 0, 0, 0.35);
-}
-
-/* States: 0 neutral, 1 taken, 2 missed */
+/* --------------------------------------------------------------------------
+   States: 0 neutral, 1 taken, 2 missed
+   - We set "color" so SVGs (fill: currentColor) automatically match state
+   -------------------------------------------------------------------------- */
 .mp-state-0 {
-    background: rgba(0, 0, 0, 0.02);
-}
-.mp-state-1 {
-    background: rgba(46, 125, 50, 0.18);
-    border-color: rgba(46, 125, 50, 0.35);
-}
-.mp-state-1 .mp-ic {
-    fill: rgba(46, 125, 50, 0.95);
-}
-.mp-state-2 {
-    background: rgba(211, 47, 47, 0.16);
-    border-color: rgba(211, 47, 47, 0.35);
-}
-.mp-state-2 .mp-ic {
-    fill: rgba(211, 47, 47, 0.95);
-}
-/* One card per day: border, spacing, subtle background */
-.mp-day-card {
-    border: 1px solid rgba(0, 0, 0, 0.16);
-    border-radius: 14px;
-    padding: 10px;
-    margin: 10px 0;
-    background: rgba(0, 0, 0, 0.02);
+    background: var(--mp-surface);
+    color: currentColor;
 }
 
-/* Optional: slightly stronger separation in multiday lists */
-.med-plan-root--multiday .mp-day-card {
-    margin: 12px 0;
+.mp-state-1 {
+    background: var(--mp-ok-bg);
+    border-color: var(--mp-ok-border);
+    color: var(--mp-ok);
+}
+
+.mp-state-2 {
+    background: var(--mp-bad-bg);
+    border-color: var(--mp-bad-border);
+    color: var(--mp-bad);
+}
+
+/* --------------------------------------------------------------------------
+   Note row (full width cell)
+   -------------------------------------------------------------------------- */
+.med-plan-note-cell {
+    padding-bottom: 1.2em;
+}
+
+/* Optional styling for the note content (if you wrap it in <div class="med-plan-note">.. */
+.med-plan-note {
+    background: var(--mp-surface-2);
+    /* border-left: 3px solid var(--mp-border); */
+    border-radius: 8px;
+    padding: 6px 8px;
+    color: currentColor;
+    opacity: 0.85;
+    white-space: pre-wrap;
+}
+.med-plan-med-packmark {
+    margin-top: 2px;
+    font-size: 12px;
+    opacity: 0.75;
+    line-height: 1.2;
+}
+.mp-mini-ic {
+    width: 14px;
+    height: 14px;
+    fill: currentColor;
+    opacity: 0.7;
+    margin-right: 4px;
+    vertical-align: -2px;
+    flex-shrink: 0;
+}
+.med-plan-med-name-main,
+.med-plan-med-packmark {
+    margin-right: 10px;
+}
+.med-plan-med-name {
+    white-space: nowrap;
 }

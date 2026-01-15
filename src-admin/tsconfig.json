@@ -14,17 +14,18 @@
         "strictNullChecks": true,
         // "strictPropertyInitialization": true,
         // "strictBindCallApply": true,
-        // "noUnusedLocals": true,
-        // "noUnusedParameters": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
         "useUnknownInCatchVariables": false,
         "target": "ES2022",
         "allowSyntheticDefaultImports": true,
-        "checkJs": false,
+        "checkJs": true,
         "noEmit": false,
         "outDir": "./build",
         "sourceMap": true,
         "sourceRoot": "./src",
-        "noImplicitAny": true,
+        "noImplicitAny": false,
+        "isolatedModules": true,
         "skipLibCheck": true,
         "verbatimModuleSyntax": true,
         "lib": ["es2018", "DOM"],
@@ -32,6 +33,13 @@
         "types": ["@iobroker/types"],
         "paths": {}
     },
-    "include": ["./src/**/*.ts", "./src/**/*.d.ts", "./src/**/*.tsx", "./src/**/*.json", "./src/**/*.css"],
+    "include": [
+        "./src/**/*.ts",
+        "./src/**/*.d.ts",
+        "./src/**/*.tsx",
+        "./src/**/*.json",
+        "./src/**/*.css",
+        "src/components/i18n.js"
+    ],
     "exclude": ["**/node_modules", "**/dist"]
 }

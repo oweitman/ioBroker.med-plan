@@ -22,7 +22,7 @@ import Brightness5Icon from '@mui/icons-material/Brightness5';
 import Brightness2Icon from '@mui/icons-material/Brightness2';
 import NightsStayIcon from '@mui/icons-material/NightsStay';
 
-import { I18n } from '@iobroker/adapter-react-v5';
+import { t } from '../components/i18n';
 
 /**
  *   patient: {id: string, name: string, plan?: any} | undefined,
@@ -40,28 +40,28 @@ export default function PatientPage(props) {
     // units for packages
     const units = React.useMemo(
         () => [
-            { value: 'pcs', label: I18n.t('pcs') }, // Stück
-            { value: 'tbl', label: I18n.t('tablets') }, // Tabletten
-            { value: 'cap', label: I18n.t('capsules') }, // Kapseln
-            { value: 'sachet', label: I18n.t('sachets') }, // Beutel/Sachets
+            { value: 'pcs', label: t('pcs') }, // Stück
+            { value: 'tbl', label: t('tablets') }, // Tabletten
+            { value: 'cap', label: t('capsules') }, // Kapseln
+            { value: 'sachet', label: t('sachets') }, // Beutel/Sachets
             { value: 'mg', label: 'mg' },
             { value: 'g', label: 'g' },
             { value: 'µg', label: 'µg' },
             { value: 'ml', label: 'ml' },
             { value: 'l', label: 'l' },
-            { value: 'drops', label: I18n.t('drops') }, // Tropfen
-            { value: 'puffs', label: I18n.t('puffs') }, // Hübe
+            { value: 'drops', label: t('drops') }, // Tropfen
+            { value: 'puffs', label: t('puffs') }, // Hübe
             { value: 'iu', label: 'IU' }, // Internationale Einheiten
-            { value: 'dose', label: I18n.t('doses') }, // Dosen
+            { value: 'dose', label: t('doses') }, // Dosen
         ],
         [],
     );
     const slots = React.useMemo(
         () => [
-            { key: 'morning', label: I18n.t('Morning'), Icon: WbSunnyIcon },
-            { key: 'noon', label: I18n.t('Noon'), Icon: Brightness5Icon },
-            { key: 'evening', label: I18n.t('Evening'), Icon: Brightness2Icon },
-            { key: 'night', label: I18n.t('Night'), Icon: NightsStayIcon },
+            { key: 'morning', label: t('Morning'), Icon: WbSunnyIcon },
+            { key: 'noon', label: t('Noon'), Icon: Brightness5Icon },
+            { key: 'evening', label: t('Evening'), Icon: Brightness2Icon },
+            { key: 'night', label: t('Night'), Icon: NightsStayIcon },
         ],
         [],
     );
@@ -106,13 +106,13 @@ export default function PatientPage(props) {
                     variant="h6"
                     sx={classes.textPrimary}
                 >
-                    {I18n.t('Patient')}
+                    {t('Patient')}
                 </Typography>
                 <Typography
                     variant="body2"
                     sx={classes.textSecondary}
                 >
-                    {I18n.t('No patient selected.')}
+                    {t('No patient selected.')}
                 </Typography>
             </Box>
         );
@@ -297,6 +297,18 @@ export default function PatientPage(props) {
             e.dose.perSlot = perSlot;
         });
     };
+    const setMedicationNote = (medId, value) => {
+        const note = String(value ?? '').trim();
+
+        onUpdatePatient(patient.id, p => {
+            const plan = clonePlanRoot(p);
+            const e = cloneMedEntry(plan, medId);
+
+            // same data area as dose/times/repeat -> medication entry level
+            // store empty string if cleared
+            e.note = note;
+        });
+    };
 
     return (
         <Box>
@@ -321,10 +333,10 @@ export default function PatientPage(props) {
                             size="small"
                             fullWidth
                         >
-                            <InputLabel>{I18n.t('Add medication')}</InputLabel>
+                            <InputLabel>{t('Add medication')}</InputLabel>
                             <Select
                                 variant="outlined"
-                                label={I18n.t('Add medication')}
+                                label={t('Add medication')}
                                 value={addMedId}
                                 onChange={e => setAddMedId(String(e.target.value))}
                             >
@@ -350,7 +362,7 @@ export default function PatientPage(props) {
                             disabled={!addMedId}
                             onClick={addMedicationToPlan}
                         >
-                            {I18n.t('Add')}
+                            {t('Add')}
                         </Button>
                     </Grid>
 
@@ -382,7 +394,7 @@ export default function PatientPage(props) {
 
                 // for select label ids (MUI v4 outlined can be picky)
                 const rhythmLabelId = `rhythm-label-${medId}`;
-                const unitLabelId = pkgId => `unit-label-${medId}-${pkgId}`;
+                //const unitLabelId = pkgId => `unit-label-${medId}-${pkgId}`;
 
                 return (
                     <Paper
@@ -401,7 +413,7 @@ export default function PatientPage(props) {
                                 {medNameById(medId)}
                             </Typography>
                             <IconButton
-                                aria-label={I18n.t('Remove from patient')}
+                                aria-label={t('Remove from patient')}
                                 onClick={() => removeMedicationFromPlan(medId)}
                             >
                                 <DeleteIcon />
@@ -412,7 +424,7 @@ export default function PatientPage(props) {
                                 variant="subtitle2"
                                 sx={classes.textPrimary}
                             >
-                                {I18n.t('Intake times & dose')}
+                                {t('Intake times & dose')}
                             </Typography>
 
                             {(() => {
@@ -444,19 +456,19 @@ export default function PatientPage(props) {
                                                     size="small"
                                                     fullWidth
                                                 >
-                                                    <InputLabel id={doseModeLabelId}>{I18n.t('Mode')}</InputLabel>
+                                                    <InputLabel id={doseModeLabelId}>{t('Mode')}</InputLabel>
                                                     <Select
                                                         variant="outlined"
                                                         labelId={doseModeLabelId}
-                                                        label={I18n.t('Mode')}
+                                                        label={t('Mode')}
                                                         value={mode}
                                                         onChange={e => setDoseMode(medId, String(e.target.value))}
                                                     >
                                                         <MenuItem value="fixed">
-                                                            {I18n.t('Same dose for all times')}
+                                                            {t('Same dose for all times')}
                                                         </MenuItem>
                                                         <MenuItem value="perSlot">
-                                                            {I18n.t('Different dose per time')}
+                                                            {t('Different dose per time')}
                                                         </MenuItem>
                                                     </Select>
                                                 </FormControl>
@@ -468,11 +480,11 @@ export default function PatientPage(props) {
                                                     size="small"
                                                     fullWidth
                                                 >
-                                                    <InputLabel id={doseUnitLabelId}>{I18n.t('Unit')}</InputLabel>
+                                                    <InputLabel id={doseUnitLabelId}>{t('Unit')}</InputLabel>
                                                     <Select
                                                         variant="outlined"
                                                         labelId={doseUnitLabelId}
-                                                        label={I18n.t('Unit')}
+                                                        label={t('Unit')}
                                                         value={dose.unit || 'pcs'}
                                                         onChange={e => setDoseUnit(medId, e.target.value)}
                                                     >
@@ -494,7 +506,7 @@ export default function PatientPage(props) {
                                                         variant="outlined"
                                                         size="small"
                                                         type="number"
-                                                        label={I18n.t('Dose')}
+                                                        label={t('Dose')}
                                                         value={dose.fixed ?? 1}
                                                         onChange={e => setDoseFixed(medId, e.target.value)}
                                                         fullWidth
@@ -514,8 +526,8 @@ export default function PatientPage(props) {
                                         {/* Slots row: keep icon buttons; show per-slot dose inputs only when perSlot */}
                                         <Grid
                                             container
-                                            spacing={1} // enger zusammen
-                                            justifyContent="flex-start" // links ausrichten
+                                            spacing={1}
+                                            justifyContent="flex-start"
                                             alignItems="flex-start"
                                             style={{ marginTop: 8 }}
                                         >
@@ -561,7 +573,7 @@ export default function PatientPage(props) {
                                                                     slotProps={{
                                                                         htmlInput: {
                                                                             min: 0,
-                                                                            step: 0.25, // oder 0.1
+                                                                            step: 0.25,
                                                                             inputMode: 'decimal',
                                                                         },
                                                                     }}
@@ -571,6 +583,23 @@ export default function PatientPage(props) {
                                                     </Grid>
                                                 );
                                             })}
+
+                                            {/* Notizfeld unter den Slots, volle Breite */}
+                                            <Grid size={{ xs: 12 }}>
+                                                <TextField
+                                                    label={t('Note / intake instructions')}
+                                                    placeholder={t(
+                                                        'e.g. with food, after breakfast, do not drive, ...',
+                                                    )}
+                                                    variant="outlined"
+                                                    size="small"
+                                                    fullWidth
+                                                    multiline
+                                                    minRows={2}
+                                                    value={entry.note ?? ''}
+                                                    onChange={e => setMedicationNote(medId, e.target.value)}
+                                                />
+                                            </Grid>
                                         </Grid>
                                     </>
                                 );
@@ -582,7 +611,7 @@ export default function PatientPage(props) {
                                 variant="subtitle2"
                                 sx={[classes.textPrimary, classes.sectionHeader]}
                             >
-                                {I18n.t('Repeat rhythm')}
+                                {t('Repeat rhythm')}
                             </Typography>
                             <Grid
                                 container
@@ -594,24 +623,24 @@ export default function PatientPage(props) {
                                         size="small"
                                         fullWidth
                                     >
-                                        <InputLabel id={rhythmLabelId}>{I18n.t('Rhythm')}</InputLabel>
+                                        <InputLabel id={rhythmLabelId}>{t('Rhythm')}</InputLabel>
                                         <Select
                                             variant="outlined"
                                             labelId={rhythmLabelId}
-                                            label={I18n.t('Rhythm')}
+                                            label={t('Rhythm')}
                                             value={repeat.type}
                                             onChange={e => setRepeatType(medId, e.target.value)}
                                         >
-                                            <MenuItem value="daily">{I18n.t('Daily')}</MenuItem>
-                                            <MenuItem value="everyXDays">{I18n.t('Every X days')}</MenuItem>
-                                            <MenuItem value="weekly">{I18n.t('Weekly')}</MenuItem>
+                                            <MenuItem value="daily">{t('Daily')}</MenuItem>
+                                            <MenuItem value="everyXDays">{t('Every X days')}</MenuItem>
+                                            <MenuItem value="weekly">{t('Weekly')}</MenuItem>
                                         </Select>
                                     </FormControl>
                                 </Grid>
                                 <Grid size={{ xs: 12, md: 6 }}>
                                     {repeat.type === 'everyXDays' ? (
                                         <TextField
-                                            label={I18n.t('Every (days)')}
+                                            label={t('Every (days)')}
                                             type="number"
                                             variant="outlined"
                                             size="small"
@@ -624,7 +653,7 @@ export default function PatientPage(props) {
                                             disabled
                                             variant="outlined"
                                             size="small"
-                                            value={repeat.type === 'daily' ? I18n.t('Every day') : I18n.t('Weekly')}
+                                            value={repeat.type === 'daily' ? t('Every day') : t('Weekly')}
                                             fullWidth
                                         />
                                     )}
@@ -642,7 +671,7 @@ export default function PatientPage(props) {
                                     variant="subtitle2"
                                     sx={classes.textPrimary}
                                 >
-                                    {I18n.t('Packages')}
+                                    {t('Packages')}
                                 </Typography>
                                 <Button
                                     color="primary"
@@ -651,7 +680,7 @@ export default function PatientPage(props) {
                                     startIcon={<AddIcon />}
                                     onClick={() => addPackage(medId)}
                                 >
-                                    {I18n.t('Add package')}
+                                    {t('Add package')}
                                 </Button>
                             </Box>
 
@@ -661,7 +690,7 @@ export default function PatientPage(props) {
                                     sx={classes.textSecondary}
                                     style={{ marginTop: 8 }}
                                 >
-                                    {I18n.t('No packages yet.')}
+                                    {t('No packages yet.')}
                                 </Typography>
                             ) : null}
 
@@ -678,7 +707,7 @@ export default function PatientPage(props) {
                                         {/* Total */}
                                         <Grid size={{ xs: 12, md: 2 }}>
                                             <TextField
-                                                label={I18n.t('Total')}
+                                                label={t('Total')}
                                                 type="number"
                                                 size="small"
                                                 variant="outlined"
@@ -693,7 +722,7 @@ export default function PatientPage(props) {
                                         {/* Current */}
                                         <Grid size={{ xs: 12, md: 2 }}>
                                             <TextField
-                                                label={I18n.t('Current')}
+                                                label={t('Current')}
                                                 type="number"
                                                 size="small"
                                                 variant="outlined"
@@ -708,7 +737,7 @@ export default function PatientPage(props) {
                                         {/* Marking */}
                                         <Grid size={{ xs: 12, md: 4 }}>
                                             <TextField
-                                                label={I18n.t('Marking (optional)')}
+                                                label={t('Marking (optional)')}
                                                 size="small"
                                                 variant="outlined"
                                                 value={pkg.mark ?? ''}
@@ -732,7 +761,7 @@ export default function PatientPage(props) {
                                         {/* Delete */}
                                         <Grid size={{ xs: 2, md: 1 }}>
                                             <IconButton
-                                                aria-label={I18n.t('Delete package')}
+                                                aria-label={t('Delete package')}
                                                 onClick={() => deletePackage(medId, pkg.id)}
                                             >
                                                 <DeleteIcon />

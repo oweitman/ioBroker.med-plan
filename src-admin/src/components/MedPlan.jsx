@@ -18,7 +18,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import PersonIcon from '@mui/icons-material/Person';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 
-import { I18n } from '@iobroker/adapter-react-v5';
+import { t } from '../components/i18n';
+
 import IntroPage from './IntroPage';
 import MedicationPage from './MedicationPage';
 import NewPatientPage from './NewPatientPage';
@@ -506,7 +507,7 @@ function MedPlan(props) {
                     sx={classes.sectionTitle}
                     variant="subtitle2"
                 >
-                    {I18n.t('Medication Plan')}
+                    {t('Medication Plan')}
                 </Typography>
 
                 <List>
@@ -519,7 +520,7 @@ function MedPlan(props) {
                                 <InfoOutlinedIcon />
                             </ListItemIcon>
                             <ListItemText
-                                primary={I18n.t('med-plan')}
+                                primary={t('med-plan')}
                                 primaryTypographyProps={{ sx: classes.listItemText }}
                             />
                         </ListItemButton>
@@ -534,7 +535,7 @@ function MedPlan(props) {
                                 <LocalPharmacyIcon />
                             </ListItemIcon>
                             <ListItemText
-                                primary={I18n.t('Medication')}
+                                primary={t('Medication')}
                                 primaryTypographyProps={{ sx: classes.listItemText }}
                             />
                         </ListItemButton>
@@ -549,7 +550,7 @@ function MedPlan(props) {
                                 <PersonAddIcon />
                             </ListItemIcon>
                             <ListItemText
-                                primary={I18n.t('New patient')}
+                                primary={t('New patient')}
                                 primaryTypographyProps={{ sx: classes.listItemText }}
                             />
                         </ListItemButton>
@@ -562,15 +563,15 @@ function MedPlan(props) {
                     sx={classes.sectionTitle}
                     variant="subtitle2"
                 >
-                    {I18n.t('Patients')}
+                    {t('Patients')}
                 </Typography>
 
                 <List>
                     {patients.length === 0 ? (
                         <ListItem>
                             <ListItemText
-                                primary={I18n.t('No patients')}
-                                secondary={I18n.t('Create a patient first.')}
+                                primary={t('No patients')}
+                                secondary={t('Create a patient first.')}
                                 primaryTypographyProps={{ sx: classes.listItemText }}
                             />
                         </ListItem>
@@ -582,7 +583,7 @@ function MedPlan(props) {
                                 secondaryAction={
                                     <IconButton
                                         edge="end"
-                                        aria-label={I18n.t('Delete patient')}
+                                        aria-label={t('Delete patient')}
                                         onClick={e => {
                                             e.preventDefault();
                                             e.stopPropagation();

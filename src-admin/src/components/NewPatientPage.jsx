@@ -12,7 +12,7 @@ import ListItemText from '@mui/material/ListItemText';
 import AddIcon from '@mui/icons-material/Add';
 import PersonIcon from '@mui/icons-material/Person';
 
-import { I18n } from '@iobroker/adapter-react-v5';
+import { t } from '../components/i18n';
 
 /**
  * @param {{
@@ -49,7 +49,7 @@ export default function NewPatientPage(props) {
                 gutterBottom
                 sx={classes.textPrimary}
             >
-                {I18n.t('New patient')}
+                {t('New patient')}
             </Typography>
 
             <Typography
@@ -57,7 +57,7 @@ export default function NewPatientPage(props) {
                 gutterBottom
                 sx={classes.textSecondary}
             >
-                {I18n.t('Create a new patient (name only for now).')}
+                {t('Create a new patient (name only for now).')}
             </Typography>
             <Grid
                 container
@@ -66,7 +66,7 @@ export default function NewPatientPage(props) {
             >
                 <Grid size={{ xs: 12, md: 6 }}>
                     <TextField
-                        label={I18n.t('Patient name')}
+                        label={t('Patient name')}
                         value={newPatientName}
                         onChange={e => setNewPatientName(e.target.value)}
                         onKeyDown={onKeyDown}
@@ -84,7 +84,7 @@ export default function NewPatientPage(props) {
                         onClick={add}
                         disabled={!newPatientName.trim()}
                     >
-                        {I18n.t('Add')}
+                        {t('Add')}
                     </Button>
                 </Grid>
             </Grid>
@@ -95,7 +95,7 @@ export default function NewPatientPage(props) {
                     gutterBottom
                     sx={classes.textPrimary}
                 >
-                    {I18n.t('Existing patients')}
+                    {t('Existing patients')}
                 </Typography>
 
                 {patients.length === 0 ? (
@@ -103,7 +103,7 @@ export default function NewPatientPage(props) {
                         variant="body2"
                         sx={classes.textSecondary}
                     >
-                        {I18n.t('No patients yet.')}
+                        {t('No patients yet.')}
                     </Typography>
                 ) : (
                     <List dense>

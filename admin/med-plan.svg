@@ -1,0 +1,13 @@
+<svg inkscape:version="1.3 (0e150ed6c4, 2023-07-21)" sodipodi:docname="med-plan-opt.svg" version="1.1" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd">
+ <sodipodi:namedview bordercolor="#000000" borderopacity="0.25" inkscape:current-layer="svg6" inkscape:cx="63.917632" inkscape:cy="64" inkscape:deskcolor="#d1d1d1" inkscape:pagecheckerboard="0" inkscape:pageopacity="0.0" inkscape:showpageshadow="2" inkscape:window-height="991" inkscape:window-maximized="1" inkscape:window-width="1920" inkscape:window-x="-9" inkscape:window-y="-9" inkscape:zoom="6.0703125" pagecolor="#ffffff" showgrid="false"/>
+ <g stroke="#ffffff">
+  <path d="m32.293 83.019q-9.826 0-16.673-6.8469-6.8469-6.8469-6.8469-16.673 0-4.704 1.777-8.9898t5.1221-7.6309l28.224-28.224q3.345-3.345 7.6309-5.1221 4.2858-1.777 8.9898-1.777 9.826 0 16.673 6.8469 6.8469 6.8469 6.8469 16.673 0 4.704-1.777 8.9898t-5.1221 7.6309l-28.224 28.224q-3.345 3.345-7.6309 5.1221-4.2858 1.777-8.9898 1.777z" fill="#000000"/>
+  <path d="m32.293 74.657q3.0314 0 5.8538-1.1498 2.8224-1.1499 4.913-3.2405l11.08-11.185-21.429-21.429-11.185 11.08q-2.0906 2.0906-3.2405 4.913t-1.1499 5.8538q0 6.2719 4.4426 10.715 4.4426 4.4426 10.715 4.4426z" fill="#ffffff"/>
+  <path d="m60.099 53.123 11.185-11.08q2.0906-2.0906 3.2405-4.913t1.1499-5.8538q0-6.2719-4.4426-10.715-4.4426-4.4426-10.715-4.4426-3.0314 0-5.8538 1.1498-2.8224 1.1499-4.913 3.2405l-11.08 11.185z" fill="#ffffff"/>
+ </g>
+ <g>
+  <path d="m87.291 120.25q-6.6267 0-12.455-2.515t-10.14-6.8263q-4.3114-4.3114-6.8263-10.14-2.515-5.8283-2.515-12.455t2.515-12.455 6.8263-10.14q4.3114-4.3114 10.14-6.8263 5.8283-2.515 12.455-2.515t12.455 2.515 10.14 6.8263q4.3114 4.3114 6.8263 10.14 2.515 5.8283 2.515 12.455t-2.515 12.455-6.8263 10.14q-4.3114 4.3114-10.14 6.8263-5.8283 2.515-12.455 2.515z" fill="#000000" stroke="#ffffff"/>
+  <path d="m87.291 113.86q10.619 0 18.084-7.465t7.465-18.084-7.465-18.084-18.084-7.465-18.084 7.465-7.465 18.084 7.465 18.084 18.084 7.465z" fill="#ffffff"/>
+  <path d="m97.83 103.32 4.471-4.4711-11.816-11.816v-14.691h-6.3872v17.245z" fill="#000000"/>
+ </g>
+</svg>
