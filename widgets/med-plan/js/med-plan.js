@@ -7,10 +7,12 @@
 
 /* // global $, vis, systemDictionary */
 
-$.extend(true, systemDictionary, {});
+import { version as pkgVersion } from '../../../package.json';
+import translations from '../i18n/translations.json';
+$.extend(true, systemDictionary, translations);
 
 vis.binds['med-plan'] = {
-    version: '0.0.1',
+    version: pkgVersion,
 
     // ---------------------------
     // Public / entry points
@@ -481,7 +483,34 @@ vis.binds['med-plan'] = {
                     med.medicationId,
                     slot.key,
                 );
+                var doseText = '';
+                try {
+                    var medCfg = patientObj && patientObj.plan && patientObj.plan.meds
+                        ? patientObj.plan.meds[med.medicationId]
+                        : null;
 
+                    var doseCfg = medCfg && medCfg.dose ? medCfg.dose : null;
+                    var unit = doseCfg && doseCfg.unit ? _(String(doseCfg.unit)) : '';
+
+                    var mode = doseCfg && doseCfg.mode ? String(doseCfg.mode) : 'fixed';
+                    var val = 0;
+
+                    if (mode === 'perSlot') {
+                        var ps = doseCfg && doseCfg.perSlot ? doseCfg.perSlot : {};
+                        var n = Number(ps && ps[slot.key]);
+                        val = Number.isFinite(n) ? n : 0;
+                    } else {
+                        var f = Number(doseCfg && doseCfg.fixed);
+                        val = Number.isFinite(f) ? f : 0;
+                    }
+
+                    // show only if > 0; if you want "0 unit" then remove this condition
+                    if (val > 0) {
+                        doseText = `${val}${unit ? ' ' + unit : ''}`;
+                    }
+                } catch /* (e) */ {
+                    doseText = '';
+                }
                 html += '<td class="med-plan-cell">';
                 html +=
                     `<button type="button" class="mp-btn mp-state-${state}"` +
@@ -492,6 +521,8 @@ vis.binds['med-plan'] = {
                     ` aria-label="${slot.key}">`;
                 html += vis.binds['med-plan']._icons[slot.key] || slot.label;
                 html += '</button>';
+                // Dose under the button (per slot)
+                html += `<div class="mp-dose">${vis.binds['med-plan']._escapeHtml(doseText)}</div>`;
                 html += '</td>';
             }
 

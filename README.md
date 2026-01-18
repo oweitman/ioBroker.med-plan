@@ -138,17 +138,19 @@ Please refer to the [`dev-server` documentation](https://github.com/ioBroker/dev
 - ok, Vis widgets are also available for dark mode
 - ok, Add missing data from the current data model to widgets
 - ok Note function for missed doses
-- More layout options
-- Calculate dose reliability
-- Report output
 - ok,Count function for remaining contents of a pack
+- ok, Translation
+- ok,Correct the contents of a pack (lost/thrown away) überschreiben des current stands
+- ok,Report output
+- ok,Bruchteildosen
+- ok, Notitzfeld je Medikament
+- Calculate dose reliability
 - Reorder reminder function
-- Correct the contents of a pack (lost/thrown away)
 - Custom definition of time slots for morning, noon, evening, and night
 - Optional definition of custom/additional slots
 - More options for intake schedule
 - Optional expansion of medication tracking with detailed information
-- ok, Translation
+- More layout options
 
 ## Feature requests
 
@@ -157,8 +159,6 @@ Please refer to the [`dev-server` documentation](https://github.com/ioBroker/dev
 - Medikament aus Medikamentendatenbank suchen <https://portal.dimdi.de/amguifree/?accessid=amis_off_am_ppv&lang=de>
 - Medikamenteninformation mit welchen Wirkstoffen. ggfs. Link auf Datenbank
 - Welcher Arzt hat verschrieben
-- Bruchteildosen
-- Notitzfeld je Medikament
 - Notitz je Einnahme
 - Veränderung der Dosis über die Zeit je Medikament
 - Als Slot noch bei Bedarf ergänzen. Wenn im widget gedrückt wird, wird mehrfach die einnahme aufgezeichnet.

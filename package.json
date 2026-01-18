@@ -80,8 +80,10 @@
     "2-build": "node tasks --2-build",
     "3-copy": "node tasks --3-copy",
     "lint": "eslint -c eslint.config.mjs .",
-    "lint-widgets": "cd widgets && eslint -c eslint.config.js . --debug",
-    "translate": "translate-adapter"
+    "lint-widgets": "cd widgets && eslint -c eslint.config.js .",
+    "translate": "translate-adapter",
+    "translate-widgets": "node ./bin/translate.js --source widgets/med-plan/i18n/en.json --format single"
+
   },
   "bugs": {
     "url": "https://github.com/oweitman/ioBroker.med-plan/issues"
