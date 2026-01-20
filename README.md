@@ -152,6 +152,10 @@ Please refer to the [`dev-server` documentation](https://github.com/ioBroker/dev
 - More options for intake schedule
 - Optional expansion of medication tracking with detailed information
 - More layout options
+- Im Bericht einen Eintrag/Fehleinnahme löschen
+- Im widget den aktuellen Einnahmeslot leuchtend markieren
+- Im Day-widget navigationspfeile für nächster Tag/vorheriger Tag
+- Im widget den nächsten Eingabeslot mit Uhrzeit und Zeitraum anzeigen. (Uhrzeit von/bis)
 
 ## Feature requests
 

@@ -120,6 +120,34 @@ export default function PatientPageMedicationCard({ classes, medId, entry, medNa
             return String(a.key).localeCompare(String(b.key));
         });
     }, [slots, slotDefs]); // slotDefs changes when times change
+    // ---- Packages: enforce Current <= Total ----
+    const clampNumber = (v, min, max) => {
+        const n = Number(v);
+        if (!Number.isFinite(n)) return min;
+        if (n < min) return min;
+        if (n > max) return max;
+        return n;
+    };
+
+    const onPkgTotalChange = (pkg, raw) => {
+        // allow empty input while typing? -> here we normalize to number >= 0
+        const nextTotal = clampNumber(raw, 0, Number.POSITIVE_INFINITY);
+
+        // persist total
+        actions.updatePackageField(medId, pkg.id, 'total', nextTotal);
+
+        // if current > new total -> clamp current down to total
+        const cur = Number(pkg.current ?? 0);
+        if (Number.isFinite(cur) && cur > nextTotal) {
+            actions.updatePackageField(medId, pkg.id, 'current', nextTotal);
+        }
+    };
+
+    const onPkgCurrentChange = (pkg, raw) => {
+        const total = clampNumber(pkg.total ?? 0, 0, Number.POSITIVE_INFINITY);
+        const nextCur = clampNumber(raw, 0, total);
+        actions.updatePackageField(medId, pkg.id, 'current', nextCur);
+    };
 
     return (
         <Paper style={{ padding: 16, marginBottom: 16 }}>
@@ -746,7 +774,8 @@ export default function PatientPageMedicationCard({ classes, medId, entry, medNa
                                     size="small"
                                     variant="outlined"
                                     value={pkg.total ?? 0}
-                                    onChange={e => actions.updatePackageField(medId, pkg.id, 'total', e.target.value)}
+                                    onChange={e => onPkgTotalChange(pkg, e.target.value)}
+                                    slotProps={{ htmlInput: { min: 0, step: 0.25 } }}
                                     fullWidth
                                 />
                             </Grid>
@@ -758,7 +787,8 @@ export default function PatientPageMedicationCard({ classes, medId, entry, medNa
                                     size="small"
                                     variant="outlined"
                                     value={pkg.current ?? 0}
-                                    onChange={e => actions.updatePackageField(medId, pkg.id, 'current', e.target.value)}
+                                    onChange={e => onPkgCurrentChange(pkg, e.target.value)}
+                                    slotProps={{ htmlInput: { min: 0, step: 0.25, max: Number(pkg.total ?? 0) } }}
                                     fullWidth
                                 />
                             </Grid>
