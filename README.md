@@ -144,10 +144,11 @@ Please refer to the [`dev-server` documentation](https://github.com/ioBroker/dev
 - ok,Report output
 - ok,Bruchteildosen
 - ok, Notitzfeld je Medikament
+- ok, Als Slot noch bei Bedarf ergänzen. Wenn im widget gedrückt wird, wird mehrfach die einnahme aufgezeichnet.
+- ok, Custom definition of time slots for morning, noon, evening, and night
+- ok, Optional definition of custom/additional slots
 - Calculate dose reliability
-- Reorder reminder function
-- Custom definition of time slots for morning, noon, evening, and night
-- Optional definition of custom/additional slots
+- Re-order reminder function
 - More options for intake schedule
 - Optional expansion of medication tracking with detailed information
 - More layout options
@@ -159,9 +160,8 @@ Please refer to the [`dev-server` documentation](https://github.com/ioBroker/dev
 - Medikament aus Medikamentendatenbank suchen <https://portal.dimdi.de/amguifree/?accessid=amis_off_am_ppv&lang=de>
 - Medikamenteninformation mit welchen Wirkstoffen. ggfs. Link auf Datenbank
 - Welcher Arzt hat verschrieben
-- Notitz je Einnahme
+- Notiz je Einnahme?
 - Veränderung der Dosis über die Zeit je Medikament
-- Als Slot noch bei Bedarf ergänzen. Wenn im widget gedrückt wird, wird mehrfach die einnahme aufgezeichnet.
 
 ## Changelog
 

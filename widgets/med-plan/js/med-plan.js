@@ -5,8 +5,6 @@
 */
 'use strict';
 
-/* // global $, vis, systemDictionary */
-
 import { version as pkgVersion } from '../../../package.json';
 import translations from '../i18n/translations.json';
 $.extend(true, systemDictionary, translations);
@@ -97,6 +95,8 @@ vis.binds['med-plan'] = {
             var medLookup = vis.binds['med-plan']._buildMedicationLookup(medArr);
             var patientVM = vis.binds['med-plan']._normalizePatientModel(patientObj, medLookup);
 
+            var slots = vis.binds['med-plan']._getSlotsForPatientSorted(patientObj);
+
             if (!patientVM.id) {
                 $div.html('<div class="med-plan-error">Patientendaten fehlen oder sind ungültig.</div>');
                 return;
@@ -116,6 +116,7 @@ vis.binds['med-plan'] = {
                     ymdKey,
                     ymdLabel,
                     showPatientName,
+                    slots,
                 );
 
                 $div.html(`<div class="med-plan-root">${vis.binds['med-plan']._wrapDayCard(inner)}</div>`);
@@ -144,6 +145,7 @@ vis.binds['med-plan'] = {
                         ymdKey2,
                         ymdLabel2,
                         false, // avoid repeating patient name per day if already shown above
+                        slots,
                     );
 
                     html += vis.binds['med-plan']._wrapDayCard(inner2);
@@ -242,6 +244,106 @@ vis.binds['med-plan'] = {
     // ---------------------------
     // Helpers
     // ---------------------------
+    _timeToMinutes: function (hhmm) {
+        var m = /^(\d{2}):(\d{2})$/.exec(String(hhmm || '').trim());
+        if (!m) return null;
+        var h = Number(m[1]);
+        var min = Number(m[2]);
+        if (!Number.isFinite(h) || !Number.isFinite(min) || h < 0 || h > 23 || min < 0 || min > 59) return null;
+        return h * 60 + min;
+    },
+
+    _getSlotDef: function (patientObj, slotKey) {
+        var slotDefs = patientObj && patientObj.plan && patientObj.plan.slotDefs ? patientObj.plan.slotDefs : null;
+        return slotDefs && slotDefs[slotKey] ? slotDefs[slotKey] : null;
+    },
+
+    _getSlotsForPatientSorted: function (patientObj) {
+        var slotDefs = patientObj && patientObj.plan && patientObj.plan.slotDefs ? patientObj.plan.slotDefs : null;
+
+        // fallback: bisherige Standard-Slots
+        if (!slotDefs || typeof slotDefs !== 'object') {
+            return [
+                { key: 'morning', label: 'Morning', icon: 'morning', type: 'standard' },
+                { key: 'noon', label: 'Noon', icon: 'noon', type: 'standard' },
+                { key: 'evening', label: 'Evening', icon: 'evening', type: 'standard' },
+                { key: 'night', label: 'Night', icon: 'night', type: 'standard' },
+            ];
+        }
+
+        // normalize to array
+        var keys = Object.keys(slotDefs);
+        var base = keys.map(function (k) {
+            var d = slotDefs[k] || {};
+            return {
+                key: k,
+                type: String(d.type || 'custom'),
+                label: d.label || k,
+                icon: d.icon || k,
+                time: d.time || '',
+            };
+        });
+
+        var timeToMinutes = vis.binds['med-plan']._timeToMinutes;
+
+        // stable key order for standard slots
+        var keyOrder = { morning: 0, noon: 1, evening: 2, night: 3 };
+
+        // sort like Admin:
+        // 1) PRN to the end
+        // 2) valid times first
+        // 3) sort by time
+        // 4) tie-breaker: standard order (if both in it)
+        // 5) standard before non-standard (as in admin)
+        // 6) final: key localeCompare
+        base.sort(function (a, b) {
+            var aType = String(a.type || 'standard');
+            var bType = String(b.type || 'standard');
+
+            var aIsPrn = aType === 'prn';
+            var bIsPrn = bType === 'prn';
+            if (aIsPrn !== bIsPrn) return aIsPrn ? 1 : -1;
+
+            var am = timeToMinutes(a.time);
+            var bm = timeToMinutes(b.time);
+
+            if (am == null && bm != null) return 1;
+            if (am != null && bm == null) return -1;
+
+            if (am != null && bm != null && am !== bm) return am - bm;
+
+            var aw = keyOrder[a.key];
+            var bw = keyOrder[b.key];
+
+            if (aw !== undefined && bw !== undefined && aw !== bw) return aw - bw;
+            if (aw !== undefined && bw === undefined) return -1;
+            if (aw === undefined && bw !== undefined) return 1;
+
+            return String(a.key).localeCompare(String(b.key));
+        });
+
+        return base;
+    },
+    _getDoseValueForSlot: function (doseCfg, slotKey) {
+        doseCfg = doseCfg && typeof doseCfg === 'object' ? doseCfg : null;
+        if (!doseCfg) return null;
+
+        var mode = String(doseCfg.mode || 'fixed');
+
+        if (mode === 'perSlot') {
+            var ps = doseCfg.perSlot && typeof doseCfg.perSlot === 'object' ? doseCfg.perSlot : null;
+            if (!ps || !(slotKey in ps)) return null;
+
+            var n = Number(ps[slotKey]);
+            return Number.isFinite(n) && n >= 0 ? n : null;
+        }
+
+        // fixed mode
+        var f = Number(doseCfg.fixed);
+        return Number.isFinite(f) && f >= 0 ? f : null;
+    },
+
+
     _safeJsonParse: function (str, fallback) {
         if (str === null || str === undefined || str === '') {
             return fallback;
@@ -380,15 +482,10 @@ vis.binds['med-plan'] = {
         return res;
     },
 
-    _slots: [
-        { key: 'morning', label: 'M' },
-        { key: 'noon', label: 'Mi' },
-        { key: 'evening', label: 'A' },
-        { key: 'night', label: 'N' },
-    ],
-
-    _renderDayTable: function (patientVM, patientObj, dt, ymdKey, ymdLabel, showPatientName) {
+    _renderDayTable: function (patientVM, patientObj, dt, ymdKey, ymdLabel, showPatientName, slots) {
         var html = '';
+
+        slots = Array.isArray(slots) ? slots : vis.binds['med-plan']._getSlotsForPatientSorted(patientObj);
 
         if (showPatientName && patientVM.name) {
             html += '<div class="med-plan-header">';
@@ -465,13 +562,13 @@ vis.binds['med-plan'] = {
 
             html += '</td>';
 
-            for (var j = 0; j < vis.binds['med-plan']._slots.length; j++) {
-                var slot = vis.binds['med-plan']._slots[j];
+            for (var j = 0; j < slots.length; j++) {
+                var slot = slots[j];
                 var enabled = !!(med.intakeTimes && med.intakeTimes[slot.key]);
 
                 if (!enabled) {
                     html += '<td class="med-plan-cell med-plan-cell--disabled">';
-                    html += `<button type="button" class="mp-btn mp-btn--disabled" disabled aria-label="${slot.key}">`;
+                    html += `<button type="button" class="mp-btn mp-btn--disabled" disabled aria-label="${vis.binds['med-plan']._escapeAttr(slot.label || slot.key)}">`;
                     html += '</button>';
                     html += '</td>';
                     continue;
@@ -485,27 +582,19 @@ vis.binds['med-plan'] = {
                 );
                 var doseText = '';
                 try {
-                    var medCfg = patientObj && patientObj.plan && patientObj.plan.meds
-                        ? patientObj.plan.meds[med.medicationId]
-                        : null;
+                    var medCfg =
+                        patientObj && patientObj.plan && patientObj.plan.meds
+                            ? patientObj.plan.meds[med.medicationId]
+                            : null;
 
                     var doseCfg = medCfg && medCfg.dose ? medCfg.dose : null;
+
                     var unit = doseCfg && doseCfg.unit ? _(String(doseCfg.unit)) : '';
 
-                    var mode = doseCfg && doseCfg.mode ? String(doseCfg.mode) : 'fixed';
-                    var val = 0;
-
-                    if (mode === 'perSlot') {
-                        var ps = doseCfg && doseCfg.perSlot ? doseCfg.perSlot : {};
-                        var n = Number(ps && ps[slot.key]);
-                        val = Number.isFinite(n) ? n : 0;
-                    } else {
-                        var f = Number(doseCfg && doseCfg.fixed);
-                        val = Number.isFinite(f) ? f : 0;
-                    }
+                    var val = vis.binds['med-plan']._getDoseValueForSlot(doseCfg, slot.key);
 
                     // show only if > 0; if you want "0 unit" then remove this condition
-                    if (val > 0) {
+                    if (val !== null && val > 0) {
                         doseText = `${val}${unit ? ' ' + unit : ''}`;
                     }
                 } catch /* (e) */ {
@@ -519,7 +608,9 @@ vis.binds['med-plan'] = {
                     ` data-slot="${vis.binds['med-plan']._escapeAttr(slot.key)}"` +
                     ` data-state="${state}"` +
                     ` aria-label="${slot.key}">`;
-                html += vis.binds['med-plan']._icons[slot.key] || slot.label;
+                var iconKey = slot.icon || slot.key;
+                html += vis.binds['med-plan']._icons[iconKey] || vis.binds['med-plan']._escapeHtml(slot.label || slot.key);
+
                 html += '</button>';
                 // Dose under the button (per slot)
                 html += `<div class="mp-dose">${vis.binds['med-plan']._escapeHtml(doseText)}</div>`;
@@ -530,7 +621,7 @@ vis.binds['med-plan'] = {
 
             // Optional medication note row (full width)
             if (med.medicationNote) {
-                const colSpan = 1 + vis.binds['med-plan']._slots.length;
+                const colSpan = 1 + slots.length;
 
                 html += '<tr class="med-plan-row med-plan-row--note">';
                 html += `<td class="med-plan-note-cell" colspan="${colSpan}">`;
@@ -619,7 +710,69 @@ vis.binds['med-plan'] = {
 
         return 0;
     },
+    _getSlotsForPatient: function (patientObj) {
+        var slotDefs = patientObj && patientObj.plan && patientObj.plan.slotDefs ? patientObj.plan.slotDefs : null;
 
+        // Fallback: bisherige Standard-Slots
+        if (!slotDefs || typeof slotDefs !== 'object') {
+            return [
+                { key: 'morning', label: 'M', icon: 'morning', type: 'standard' },
+                { key: 'noon', label: 'Mi', icon: 'noon', type: 'standard' },
+                { key: 'evening', label: 'A', icon: 'evening', type: 'standard' },
+                { key: 'night', label: 'N', icon: 'night', type: 'standard' },
+            ];
+        }
+
+        // 1) gewünschte Basis-Reihenfolge
+        var baseOrder = ['morning', 'noon', 'evening', 'night'];
+
+        // 2) Defs in Slot-Array normalisieren
+        function toSlot(key, def) {
+            def = def || {};
+            return {
+                key: key,
+                type: def.type || 'custom',
+                // label aus slotDefs, sonst key
+                label: def.label || key,
+                // icon aus slotDefs (morning/noon/evening/night/custom/...)
+                icon: def.icon || key,
+                // optional: time zum Sortieren (wird nicht angezeigt)
+                time: def.time || '',
+            };
+        }
+
+        var keys = Object.keys(slotDefs);
+
+        // 3) Standard zuerst in fixer Reihenfolge (wenn vorhanden)
+        var slots = [];
+        for (var i = 0; i < baseOrder.length; i++) {
+            var k = baseOrder[i];
+            if (slotDefs[k]) {
+                slots.push(toSlot(k, slotDefs[k]));
+            }
+        }
+
+        // 4) alle übrigen Slots (custom etc.) – prn zuletzt
+        var rest = keys
+            .filter(function (k) { return baseOrder.indexOf(k) === -1; })
+            .map(function (k) { return toSlot(k, slotDefs[k]); });
+
+        // prn ans Ende schieben (falls vorhanden)
+        var prn = rest.filter(function (s) { return s.key === 'prn' || s.type === 'prn'; });
+        rest = rest.filter(function (s) { return !(s.key === 'prn' || s.type === 'prn'); });
+
+        // optional: rest nach time, dann label sortieren (Anzeige egal, aber stabil)
+        rest.sort(function (a, b) {
+            var at = a.time || '';
+            var bt = b.time || '';
+            if (at < bt) return -1;
+            if (at > bt) return 1;
+            return (a.label || '').localeCompare(b.label || '');
+        });
+
+        // zusammenbauen
+        return slots.concat(rest).concat(prn);
+    },
     _icons: {
         morning:
             '<svg class="mp-ic" focusable="false" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79 1.42-1.41zM4 10.5H1v2h3v-2zm9-9.95h-2V3.5h2V.55zm7.45 3.91l-1.41-1.41-1.79 1.79 1.41 1.41 1.79-1.79zm-3.21 13.7l1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4zM20 10.5v2h3v-2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm-1 16.95h2V19.5h-2v2.95zm-7.45-3.91l1.41 1.41 1.79-1.8-1.41-1.41-1.79 1.8z"></path></svg>',
@@ -627,6 +780,8 @@ vis.binds['med-plan'] = {
         evening:
             '<svg class="mp-ic" focusable="false" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69zM12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6c3.31 0 6 2.69 6 6s-2.69 6-6 6z"></path></svg>',
         night: '<svg class="mp-ic" focusable="false" viewBox="0 0 24 24" aria-hidden="true"><path d="M11.1 12.08c-2.33-4.51-.5-8.48.53-10.07C6.27 2.2 1.98 6.59 1.98 12c0 .14.02.28.02.42.62-.27 1.29-.42 2-.42 1.66 0 3.18.83 4.1 2.15 1.67.48 2.9 2.02 2.9 3.85 0 1.52-.87 2.83-2.12 3.51.98.32 2.03.5 3.11.5 3.5 0 6.58-1.8 8.37-4.52-2.36.23-6.98-.97-9.26-5.41z"></path><path d="M7 16h-.18C6.4 14.84 5.3 14 4 14c-1.66 0-3 1.34-3 3s1.34 3 3 3h3c1.1 0 2-.9 2-2s-.9-2-2-2z"></path></svg>',
+        custom: '<svg class="mp-ic" focusable="false" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 18h2v-2h-2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8m0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4"></path></svg>',
+        custom1: '<svg class="mp-ic" focusable="false" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4a8 8 0 108 8 8 8 0 00-8-8zm1 9h-2V7h2zm0 4h-2v-2h2z"></path></svg>',
     },
     _mpMiniIcons: {
         patient:

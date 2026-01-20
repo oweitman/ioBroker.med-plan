@@ -274,3 +274,7 @@
 .med-plan-med-name {
     white-space: nowrap;
 }
+.mp-dose {
+    font-size: 70%;
+    text-align: center;
+}

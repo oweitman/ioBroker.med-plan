@@ -38,6 +38,7 @@ export default [
                 // vis globals
                 vis: 'readonly',
                 systemDictionary: 'writable',
+                _: 'readonly',
             },
         },
 

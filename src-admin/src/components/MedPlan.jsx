@@ -39,6 +39,9 @@ const styles = theme => ({
     sectionHeader: {
         marginBottom: '16px', // oder theme.spacing(1)
     },
+    chipSlotType: {
+        marginBottom: '16px', // oder theme.spacing(1)
+    },
     textPrimary: { color: theme.palette.text.primary },
     textSecondary: { color: theme.palette.text.secondary },
     listItemText: { color: theme.palette.text.primary },
@@ -95,10 +98,18 @@ const styles = theme => ({
         opacity: 0.55,
     },
     slotDoseField: {
-        width: '64px',
+        width: '120px',
         marginTop: '6px',
         '& input': {
             textAlign: 'center',
+            padding: '6px 4px',
+        },
+    },
+    slotInputFields: {
+        width: '120px',
+        marginTop: '6px',
+        '& input': {
+            textAlign: 'left',
             padding: '6px 4px',
         },
     },
@@ -123,6 +134,12 @@ function MedPlan(props) {
     const [medications, setMedications] = React.useState(
         Array.isArray(native?.medplan?.medications) ? native.medplan.medications : [],
     );
+
+    // Keep latest patients in a ref to avoid stale closures in debounced flush
+    const patientsRef = React.useRef(patients);
+    React.useEffect(() => {
+        patientsRef.current = patients;
+    }, [patients]);
 
     // Avoid re-seeding
     const seededRef = React.useRef(false);
@@ -240,6 +257,65 @@ function MedPlan(props) {
         [sendToAdapter, patientStateIdByName],
     );
 
+    // ---- Debounced persist queue for patient updates ----
+    /** @type {React.MutableRefObject<ReturnType<typeof setTimeout> | null>} */
+    const persistTimerRef = React.useRef(null);
+    const pendingPatientsRef = React.useRef(new Map()); // Map<patientId, patientObject>
+    const pendingIndexDirtyRef = React.useRef(false);
+
+    const PATIENT_PERSIST_DEBOUNCE_MS = 350;
+
+    const flushPatientPersists = React.useCallback(async () => {
+        if (persistTimerRef.current) {
+            clearTimeout(persistTimerRef.current);
+            persistTimerRef.current = null;
+        }
+
+        const pendingMap = pendingPatientsRef.current;
+        const needsIndex = pendingIndexDirtyRef.current;
+
+        if (!pendingMap.size && !needsIndex) return;
+
+        // snapshot + reset early to allow new edits while persisting
+        const patientsToPersist = Array.from(pendingMap.values());
+        pendingMap.clear();
+        pendingIndexDirtyRef.current = false;
+
+        try {
+            // Persist patient objects first (individual states)
+            for (const p of patientsToPersist) {
+                await persistPatientData(p);
+            }
+
+            // Persist index if needed (use latest patients, not closure)
+            if (needsIndex) {
+                await persistPatientsIndex(patientsRef.current);
+            }
+        } catch (e) {
+            console.error('Debounced persist failed', e);
+        }
+    }, [persistPatientData, persistPatientsIndex]);
+
+    const schedulePatientPersists = React.useCallback(() => {
+        if (persistTimerRef.current) {
+            clearTimeout(persistTimerRef.current);
+        }
+        persistTimerRef.current = setTimeout(() => {
+            flushPatientPersists();
+        }, PATIENT_PERSIST_DEBOUNCE_MS);
+    }, [flushPatientPersists]);
+
+    // Flush on unmount (avoid losing last keystrokes)
+    React.useEffect(() => {
+        return () => {
+            if (persistTimerRef.current) {
+                clearTimeout(persistTimerRef.current);
+            }
+            // best-effort flush; cannot await in cleanup
+            flushPatientPersists();
+        };
+    }, [flushPatientPersists]);
+
     // ---------- UI actions ----------
     const addPatient = React.useCallback(
         async name => {
@@ -247,20 +323,27 @@ function MedPlan(props) {
             if (!n) return;
 
             const newPatient = { id: makeId(), name: n, plan: { meds: {} } };
-            const nextPatients = [...patients, newPatient];
 
+            // ensure pending writes are flushed before structural changes
+            await flushPatientPersists();
+
+            const nextPatients = [...patientsRef.current, newPatient];
             setPatients(nextPatients);
 
             await persistPatientsIndex(nextPatients);
             await persistPatientData(newPatient);
         },
-        [patients, makeId, persistPatientsIndex, persistPatientData],
+        [makeId, flushPatientPersists, persistPatientsIndex, persistPatientData],
     );
 
     const deletePatient = React.useCallback(
         async patientId => {
-            const p = patients.find(x => x.id === patientId);
-            const nextPatients = patients.filter(x => x.id !== patientId);
+            // ensure pending writes don't overwrite after delete
+            await flushPatientPersists();
+
+            const currentPatients = patientsRef.current;
+            const p = currentPatients.find(x => x.id === patientId);
+            const nextPatients = currentPatients.filter(x => x.id !== patientId);
 
             setPatients(nextPatients);
 
@@ -273,7 +356,7 @@ function MedPlan(props) {
                 setSelected({ type: 'intro', patientId: '' });
             }
         },
-        [patients, persistPatientsIndex, deletePatientData, selected],
+        [flushPatientPersists, deletePatientData, persistPatientsIndex, selected],
     );
 
     const addMedication = React.useCallback(
@@ -298,21 +381,29 @@ function MedPlan(props) {
     );
 
     const updatePatient = React.useCallback(
-        async (patientId, updater) => {
-            const current = patients.find(p => p.id === patientId);
-            if (!current) return;
+        (patientId, updater) => {
+            setPatients(prev => {
+                const current = prev.find(p => p.id === patientId);
+                if (!current) return prev;
 
-            const updatedPatient = { ...current };
-            updater(updatedPatient);
+                const updatedPatient = { ...current };
+                updater(updatedPatient);
 
-            const nextPatients = patients.map(p => (p.id === patientId ? updatedPatient : p));
+                const next = prev.map(p => (p.id === patientId ? updatedPatient : p));
 
-            setPatients(nextPatients);
+                // queue for persistence
+                pendingPatientsRef.current.set(patientId, updatedPatient);
 
-            await persistPatientData(updatedPatient);
-            await persistPatientsIndex(nextPatients);
+                // mark index dirty only if name changed
+                const nameChanged = String(updatedPatient.name || '') !== String(current.name || '');
+                if (nameChanged) pendingIndexDirtyRef.current = true;
+
+                return next;
+            });
+
+            schedulePatientPersists();
         },
-        [patients, persistPatientData, persistPatientsIndex],
+        [schedulePatientPersists],
     );
 
     const selectedPatient = selected.type === 'patient' ? patients.find(p => p.id === selected.patientId) : undefined;
@@ -443,7 +534,7 @@ function MedPlan(props) {
                 await persistPatientData(seedPatients[0]);
                 await persistPatientData(seedPatients[1]);
             } catch (e) {
-                if (patients.length || medications.length) return;
+                if (patientsRef.current.length || medications.length) return;
 
                 setMedications(seedMedications);
                 setPatients(seedPatients);

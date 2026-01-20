@@ -87,5 +87,21 @@
     "Time": "Time",
     "Slot": "Slot",
     "Showing": "Showing",
-    "of": "of"
+    "of": "of",
+    "Custom slot": "Custom slot",
+    "As needed": "As needed",
+    "Custom": "Custom",
+    "Standard": "Standard",
+    "Hide advanced": "Hide advanced",
+    "Advanced": "Advanced",
+    "Missed after (min)": "Missed after (min)",
+    "0 = immediately at time": "0 = immediately at time",
+    "Remove custom slot": "Remove custom slot",
+    "Label": "Label",
+    "Add custom slot": "Add custom slot",
+    "PRN": "PRN",
+    "PRN enabled": "PRN enabled",
+    "Enable PRN slot": "Enable PRN slot",
+    "New custom slot": "New custom slot",
+    "After adding, activate the slot for this medication by clicking its icon.": "After adding, activate the slot for this medication by clicking its icon."
 }
