@@ -147,6 +147,7 @@ Please refer to the [`dev-server` documentation](https://github.com/ioBroker/dev
 - ok, Als Slot noch bei Bedarf ergänzen. Wenn im widget gedrückt wird, wird mehrfach die einnahme aufgezeichnet.
 - ok, Custom definition of time slots for morning, noon, evening, and night
 - ok, Optional definition of custom/additional slots
+- ok, trigger reminders for doses
 - Calculate dose reliability
 - Re-order reminder function
 - More options for intake schedule
@@ -156,11 +157,12 @@ Please refer to the [`dev-server` documentation](https://github.com/ioBroker/dev
 - Im widget den aktuellen Einnahmeslot leuchtend markieren
 - Im Day-widget navigationspfeile für nächster Tag/vorheriger Tag
 - Im widget den nächsten Eingabeslot mit Uhrzeit und Zeitraum anzeigen. (Uhrzeit von/bis)
+- wenn Medikament aus der generellen Liste wie auch aus dem Plan gelöscht wird, werden auch die zugehörigen Einnahmezeiten gelöscht.
 
 ## Feature requests
 
 - automaticly create patients from iobroker users
-- trigger reminders for doses and other events (ordering)
+- trigger reminders for ordering
 - Medikament aus Medikamentendatenbank suchen <https://portal.dimdi.de/amguifree/?accessid=amis_off_am_ppv&lang=de>
 - Medikamenteninformation mit welchen Wirkstoffen. ggfs. Link auf Datenbank
 - Welcher Arzt hat verschrieben

@@ -1,3 +1,4 @@
+// src-admin/src/components/PatientPageIntakeHistory.jsx
 import React from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -18,7 +19,7 @@ export default function PatientPageIntakeHistory({ classes, patient, medications
 
     const slotByKey = React.useMemo(() => {
         const m = {};
-        slots.forEach(s => (m[s.key] = s));
+        (Array.isArray(slots) ? slots : []).forEach(s => (m[s.key] = s));
         return m;
     }, [slots]);
 
@@ -28,26 +29,36 @@ export default function PatientPageIntakeHistory({ classes, patient, medications
         if (state === 0) return t('Planned');
         return `${t('State')} ${state}`;
     }, []);
+    const normalizeIntake = React.useCallback(ev => {
+        if (typeof ev === 'number') return { state: ev, ts: null, count: null };
+        if (ev && typeof ev === 'object') {
+            return {
+                state: typeof ev.state === 'number' ? ev.state : null,
+                ts: typeof ev.ts === 'number' ? ev.ts : null,
+                count: typeof ev.count === 'number' ? ev.count : null,
+            };
+        }
+        return { state: null, ts: null, count: null };
+    }, []);
+    const rows = React.useMemo(() => {
+        const intakeRoot = patient?.plan?.intake;
+        if (!intakeRoot || typeof intakeRoot !== 'object') return [];
 
-    const buildRows = React.useCallback(() => {
-        const intakeRoot = patient?.plan?.intake || {};
-        const rows = [];
-
+        const out = [];
         for (const ymd of Object.keys(intakeRoot)) {
             const perDay = intakeRoot[ymd] || {};
             for (const medId of Object.keys(perDay)) {
                 const perMed = perDay[medId] || {};
                 for (const slotKey of Object.keys(perMed)) {
-                    const ev = perMed[slotKey] || {};
-                    rows.push({ ymd, medId, slotKey, state: ev.state, ts: ev.ts });
+                    const n = normalizeIntake(perMed[slotKey]);
+                    out.push({ ymd, medId, slotKey, ...n });
                 }
             }
         }
 
         const slotOrder = { morning: 0, noon: 1, evening: 2, night: 3 };
 
-        // Sort: 1) date desc, 2) slot order asc, 3) medId stable, 4) ts stable
-        rows.sort((a, b) => {
+        out.sort((a, b) => {
             if (a.ymd !== b.ymd) return a.ymd < b.ymd ? 1 : -1;
 
             const ao = slotOrder[a.slotKey] ?? 999;
@@ -56,13 +67,12 @@ export default function PatientPageIntakeHistory({ classes, patient, medications
 
             if (a.medId !== b.medId) return a.medId.localeCompare(b.medId);
 
-            return Number(a.ts || 0) - Number(b.ts || 0);
+            // latest first:
+            return Number(b.ts || 0) - Number(a.ts || 0);
         });
 
-        return rows;
-    }, [patient?.plan?.intake]);
-
-    const rows = buildRows();
+        return out;
+    }, [patient, normalizeIntake]);
 
     return (
         <Paper style={{ padding: 16, marginTop: 24 }}>

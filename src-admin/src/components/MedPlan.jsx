@@ -1,4 +1,4 @@
-// src-admin/src/MedPlan.jsx
+// src-admin/src/components/MedPlan.jsx
 import React from 'react';
 import { useTheme } from '@mui/material/styles';
 
@@ -367,6 +367,7 @@ function MedPlan(props) {
             const meds = plan.meds && typeof plan.meds === 'object' ? plan.meds : defPlan.meds;
 
             const normalizedMeds = {};
+            const intake = plan.intake && typeof plan.intake === 'object' ? plan.intake : {};
             for (const [medId, m] of Object.entries(meds)) {
                 const mm = m && typeof m === 'object' ? m : {};
 
@@ -429,6 +430,7 @@ function MedPlan(props) {
                     slotDefs,
                     reminders,
                     meds: normalizedMeds,
+                    intake,
                 },
             };
         },

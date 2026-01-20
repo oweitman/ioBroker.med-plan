@@ -1,3 +1,4 @@
+// src-admin/src/components/PatientPageMedicationCard.jsx
 import React from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -20,12 +21,14 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import MoreTimeIcon from '@mui/icons-material/MoreTime';
 
+import MedicationReminderOverride from './MedicationReminderOverride';
+
 import { t } from '../components/i18n';
 
 export default function PatientPageMedicationCard({ classes, medId, entry, medName, units, slots, slotDefs, actions }) {
     const repeat = entry.repeat || { type: 'daily', every: 1 };
     const rhythmLabelId = `rhythm-label-${medId}`;
-    const rangeInvalid = entry.startDate && entry.endDate && entry.endDate < entry.startDate;
+    const rangeInvalid = !!(entry.startDate && entry.endDate && entry.endDate < entry.startDate);
 
     // advanced UI toggle
     const [showAdvancedSlots, setShowAdvancedSlots] = React.useState(false);
@@ -720,6 +723,21 @@ export default function PatientPageMedicationCard({ classes, medId, entry, medNa
                         )}
                     </Grid>
                 </Grid>
+            </Box>
+            {/* Reminders override (per medication) */}
+            <Box mt={3}>
+                <Typography
+                    variant="subtitle2"
+                    sx={classes.textPrimary}
+                >
+                    {t('Medication reminder override')}
+                </Typography>
+
+                <MedicationReminderOverride
+                    classes={classes}
+                    override={entry.reminderPolicyOverride}
+                    onChange={nextOverride => actions.setMedicationReminderOverride(medId, nextOverride)}
+                />
             </Box>
 
             {/* Packages */}

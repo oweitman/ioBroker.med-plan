@@ -1,3 +1,4 @@
+// src-admin/src/components/PatientPage.jsx
 import React from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -15,6 +16,7 @@ import PatientPageHeader from './PatientPageHeader';
 import PatientPageAddMedication from './PatientPageAddMedication';
 import PatientPageMedicationCard from './PatientPageMedicationCard';
 import PatientPageIntakeHistory from './PatientPageIntakeHistory';
+import PatientRemindersCard from './PatientRemindersCard';
 
 /**
  * props:
@@ -66,6 +68,56 @@ export default function PatientPage(props) {
             night: { type: 'standard', label: t('Night'), time: '22:30', graceMin: 120 },
         }),
         [],
+    );
+    const DEFAULT_REMINDERS = React.useMemo(
+        () => ({
+            enabled: true,
+            defaultPolicy: {
+                strategy: 'hybrid',
+                windowMinutes: 120,
+                maxReminders: 5,
+                minGapMinutes: 10,
+                fixedEveryMinutes: 15,
+                hybridOffsets: [0, 0.66, 0.83, 0.92, 0.96],
+                bundle: true,
+                severity: {
+                    mode: 'byRemainingMinutes',
+                    thresholds: [
+                        { lte: 10, level: 'urgent' },
+                        { lte: 30, level: 'warn' },
+                        { lte: 60, level: 'notice' },
+                        { lte: 999999, level: 'info' },
+                    ],
+                },
+            },
+        }),
+        [],
+    );
+
+    const ensureReminders = React.useCallback(
+        plan => {
+            plan.reminders = plan.reminders && typeof plan.reminders === 'object' ? { ...plan.reminders } : {};
+            const cur = plan.reminders;
+
+            // enabled default
+            if (cur.enabled === undefined) cur.enabled = DEFAULT_REMINDERS.enabled;
+
+            // defaultPolicy merge
+            const dp = cur.defaultPolicy && typeof cur.defaultPolicy === 'object' ? { ...cur.defaultPolicy } : {};
+            cur.defaultPolicy = { ...DEFAULT_REMINDERS.defaultPolicy, ...dp };
+
+            // ensure severity merge
+            const sev =
+                cur.defaultPolicy.severity && typeof cur.defaultPolicy.severity === 'object'
+                    ? cur.defaultPolicy.severity
+                    : {};
+            const defSev = DEFAULT_REMINDERS.defaultPolicy.severity;
+            cur.defaultPolicy.severity = { ...defSev, ...sev };
+            cur.defaultPolicy.severity.thresholds = Array.isArray(sev.thresholds) ? sev.thresholds : defSev.thresholds;
+
+            plan.reminders = cur;
+        },
+        [DEFAULT_REMINDERS],
     );
 
     const ICON_BY_KEY = React.useMemo(
@@ -538,12 +590,66 @@ export default function PatientPage(props) {
                 p.name = nextName;
             });
         };
+        const patchPatientReminders = patch => {
+            onUpdatePatient(patient.id, p => {
+                const plan = clonePlanRoot(p);
+                ensureSlotDefs(plan);
+                ensureReminders(plan);
+
+                const cur = plan.reminders || {};
+                const next = { ...cur, ...patch };
+
+                // deep-merge defaultPolicy if provided
+                if (patch && patch.defaultPolicy) {
+                    next.defaultPolicy = { ...(cur.defaultPolicy || {}), ...(patch.defaultPolicy || {}) };
+
+                    if (patch.defaultPolicy.severity) {
+                        next.defaultPolicy.severity = {
+                            ...((cur.defaultPolicy || {}).severity || {}),
+                            ...patch.defaultPolicy.severity,
+                        };
+                    }
+                }
+
+                plan.reminders = next;
+            });
+        };
+
+        const setMedicationReminderOverride = (medId, nextOverride) => {
+            onUpdatePatient(patient.id, p => {
+                const plan = clonePlanRoot(p);
+                ensureSlotDefs(plan);
+                ensureReminders(plan);
+
+                const e = cloneMedEntry(plan, medId);
+
+                // If disabled -> remove override entirely to keep data clean
+                if (!nextOverride || !nextOverride.enabled) {
+                    delete e.reminderPolicyOverride;
+                    return;
+                }
+
+                // sanitize policy: remove undefined keys
+                const policy =
+                    nextOverride.policy && typeof nextOverride.policy === 'object' ? { ...nextOverride.policy } : {};
+                Object.keys(policy).forEach(k => {
+                    if (policy[k] === undefined) delete policy[k];
+                });
+
+                e.reminderPolicyOverride = {
+                    enabled: true,
+                    policy,
+                };
+            });
+        };
 
         return {
             addMedicationToPlan,
             removeMedicationFromPlan,
             renamePatient,
-
+            // reminders (patient + medication override)
+            patchPatientReminders,
+            setMedicationReminderOverride,
             // slotDefs
             setSlotDefField,
             addCustomSlotDef,
@@ -565,7 +671,17 @@ export default function PatientPage(props) {
             setTimeSlot,
             setMedicationNote,
         };
-    }, [addMedId, patient.id, onUpdatePatient, clonePlanRoot, cloneMedEntry, ensureSlotDefs, makeId, todayIso]);
+    }, [
+        addMedId,
+        patient.id,
+        onUpdatePatient,
+        clonePlanRoot,
+        cloneMedEntry,
+        ensureSlotDefs,
+        ensureReminders,
+        makeId,
+        todayIso,
+    ]);
 
     return (
         <Box>
@@ -574,7 +690,11 @@ export default function PatientPage(props) {
                 name={patient.name}
                 onRename={actions.renamePatient}
             />
-
+            <PatientRemindersCard
+                classes={classes}
+                reminders={patient.plan?.reminders}
+                onPatchReminders={actions.patchPatientReminders}
+            />
             <PatientPageAddMedication
                 classes={classes}
                 medications={medications}

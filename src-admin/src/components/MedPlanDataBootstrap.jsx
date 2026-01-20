@@ -1,4 +1,4 @@
-// src-admin/src/MedPlanDataBootstrap.jsx
+// src-admin/src/components/MedPlanDataBootstrap.jsx
 import React from 'react';
 
 /**
