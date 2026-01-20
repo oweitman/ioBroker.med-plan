@@ -25,6 +25,8 @@ import MedicationPage from './MedicationPage';
 import NewPatientPage from './NewPatientPage';
 import PatientPage from './PatientPage';
 
+import MedPlanDataBootstrap from './MedPlanDataBootstrap';
+
 const styles = theme => ({
     root: { display: 'flex', height: '100%', minHeight: 400 },
     drawer: { width: 280, flexShrink: 0 },
@@ -37,10 +39,10 @@ const styles = theme => ({
         color: theme.palette.text.primary,
     },
     sectionHeader: {
-        marginBottom: '16px', // oder theme.spacing(1)
+        marginBottom: '16px',
     },
     chipSlotType: {
-        marginBottom: '16px', // oder theme.spacing(1)
+        marginBottom: '16px',
     },
     textPrimary: { color: theme.palette.text.primary },
     textSecondary: { color: theme.palette.text.secondary },
@@ -316,16 +318,140 @@ function MedPlan(props) {
         };
     }, [flushPatientPersists]);
 
+    // ---------- Plan defaults + normalization (for migrations & seeds) ----------
+    const makeDefaultPlan = React.useCallback(() => {
+        return {
+            slotDefs: {
+                morning: { type: 'standard', label: 'Morning', time: '08:00', graceMin: 120 },
+                noon: { type: 'standard', label: 'Noon', time: '12:30', graceMin: 120 },
+                evening: { type: 'standard', label: 'Evening', time: '18:30', graceMin: 120 },
+                night: { type: 'standard', label: 'Night', time: '22:30', graceMin: 120 },
+                prn: { type: 'prn', label: 'As needed', time: '08:00', graceMin: 1440 },
+                c1: { type: 'custom', label: 'Snack 1', time: '10:00', graceMin: 120 },
+                c2: { type: 'custom', label: 'Snack 2', time: '14:00', graceMin: 120 },
+            },
+            reminders: {
+                enabled: true,
+                defaultPolicy: {
+                    strategy: 'hybrid',
+                    windowMinutes: 120,
+                    maxReminders: 5,
+                    minGapMinutes: 10,
+                    fixedEveryMinutes: 15,
+                    hybridOffsets: [0, 0.66, 0.83, 0.92, 0.96],
+                    bundle: true,
+                    severity: {
+                        mode: 'byRemainingMinutes',
+                        thresholds: [
+                            { lte: 10, level: 'urgent' },
+                            { lte: 30, level: 'warn' },
+                            { lte: 60, level: 'notice' },
+                            { lte: 999999, level: 'info' },
+                        ],
+                    },
+                },
+            },
+            meds: {},
+        };
+    }, []);
+
+    const normalizePatient = React.useCallback(
+        p => {
+            if (!p || typeof p !== 'object') return null;
+
+            const plan = p.plan && typeof p.plan === 'object' ? p.plan : {};
+            const defPlan = makeDefaultPlan();
+
+            const slotDefs = plan.slotDefs && typeof plan.slotDefs === 'object' ? plan.slotDefs : defPlan.slotDefs;
+            const reminders = plan.reminders && typeof plan.reminders === 'object' ? plan.reminders : defPlan.reminders;
+            const meds = plan.meds && typeof plan.meds === 'object' ? plan.meds : defPlan.meds;
+
+            const normalizedMeds = {};
+            for (const [medId, m] of Object.entries(meds)) {
+                const mm = m && typeof m === 'object' ? m : {};
+
+                const times =
+                    mm.times && typeof mm.times === 'object'
+                        ? mm.times
+                        : {
+                              morning: false,
+                              noon: false,
+                              evening: false,
+                              night: false,
+                              prn: false,
+                              c1: false,
+                              c2: false,
+                          };
+
+                const dose = mm.dose && typeof mm.dose === 'object' ? mm.dose : {};
+                const perSlot = dose.perSlot && typeof dose.perSlot === 'object' ? dose.perSlot : {};
+
+                const perSlotFull = {
+                    morning: perSlot.morning ?? 0,
+                    noon: perSlot.noon ?? 0,
+                    evening: perSlot.evening ?? 0,
+                    night: perSlot.night ?? 0,
+                    prn: perSlot.prn ?? 0,
+                    c1: perSlot.c1 ?? 0,
+                    c2: perSlot.c2 ?? 0,
+                };
+
+                normalizedMeds[medId] = {
+                    startDate: mm.startDate ?? '',
+                    endDate: mm.endDate ?? '',
+                    times: {
+                        morning: !!times.morning,
+                        noon: !!times.noon,
+                        evening: !!times.evening,
+                        night: !!times.night,
+                        prn: !!times.prn,
+                        c1: !!times.c1,
+                        c2: !!times.c2,
+                    },
+                    repeat: mm.repeat ?? { type: 'daily', every: 1 },
+                    dose: {
+                        mode: dose.mode ?? 'fixed',
+                        unit: dose.unit ?? 'pcs',
+                        fixed: dose.fixed ?? 1,
+                        perSlot: perSlotFull,
+                    },
+                    packages: Array.isArray(mm.packages) ? mm.packages : [],
+                    note: mm.note ?? '',
+                    reminderPolicyOverride: mm.reminderPolicyOverride ?? undefined,
+                };
+            }
+
+            return {
+                id: p.id ?? '',
+                name: p.name ?? '',
+                stateId: p.stateId,
+                plan: {
+                    slotDefs,
+                    reminders,
+                    meds: normalizedMeds,
+                },
+            };
+        },
+        [makeDefaultPlan],
+    );
+
     // ---------- UI actions ----------
     const addPatient = React.useCallback(
         async name => {
             const n = String(name || '').trim();
             if (!n) return;
 
-            const newPatient = { id: makeId(), name: n, plan: { meds: {} } };
-
             // ensure pending writes are flushed before structural changes
             await flushPatientPersists();
+
+            const basePlan = makeDefaultPlan();
+            basePlan.meds = {};
+
+            const newPatient = normalizePatient({ id: makeId(), name: n, plan: basePlan }) || {
+                id: makeId(),
+                name: n,
+                plan: basePlan,
+            };
 
             const nextPatients = [...patientsRef.current, newPatient];
             setPatients(nextPatients);
@@ -333,7 +459,7 @@ function MedPlan(props) {
             await persistPatientsIndex(nextPatients);
             await persistPatientData(newPatient);
         },
-        [makeId, flushPatientPersists, persistPatientsIndex, persistPatientData],
+        [makeId, flushPatientPersists, makeDefaultPlan, normalizePatient, persistPatientsIndex, persistPatientData],
     );
 
     const deletePatient = React.useCallback(
@@ -389,13 +515,16 @@ function MedPlan(props) {
                 const updatedPatient = { ...current };
                 updater(updatedPatient);
 
-                const next = prev.map(p => (p.id === patientId ? updatedPatient : p));
+                // normalize to avoid partial edits creating invalid structures
+                const normalized = normalizePatient(updatedPatient) || updatedPatient;
+
+                const next = prev.map(p => (p.id === patientId ? normalized : p));
 
                 // queue for persistence
-                pendingPatientsRef.current.set(patientId, updatedPatient);
+                pendingPatientsRef.current.set(patientId, normalized);
 
                 // mark index dirty only if name changed
-                const nameChanged = String(updatedPatient.name || '') !== String(current.name || '');
+                const nameChanged = String(normalized.name || '') !== String(current.name || '');
                 if (nameChanged) pendingIndexDirtyRef.current = true;
 
                 return next;
@@ -403,152 +532,15 @@ function MedPlan(props) {
 
             schedulePatientPersists();
         },
-        [schedulePatientPersists],
+        [normalizePatient, schedulePatientPersists],
     );
 
     const selectedPatient = selected.type === 'patient' ? patients.find(p => p.id === selected.patientId) : undefined;
 
-    // --- INIT: load datapoints first, seed only if empty ---
-    React.useEffect(() => {
-        if (seededRef.current) return;
-        seededRef.current = true;
-
-        const seedMedications = [
-            { id: 'med_paracetamol', name: 'Paracetamol' },
-            { id: 'med_ibuprofen', name: 'Ibuprofen' },
-            { id: 'med_vitd3', name: 'Vitamin D3' },
-            { id: 'med_metformin', name: 'Metformin' },
-            { id: 'med_amoxicillin', name: 'Amoxicillin' },
-        ];
-
-        const seedPatients = [
-            {
-                id: 'pat_max',
-                name: 'Max Mustermann',
-                plan: {
-                    meds: {
-                        med_paracetamol: {
-                            times: { morning: true, noon: false, evening: true, night: false },
-                            repeat: { type: 'daily', every: 1 },
-                            dose: {
-                                mode: 'perSlot',
-                                unit: 'tbl',
-                                fixed: 1,
-                                perSlot: { morning: 1, noon: 1, evening: 2, night: 1 },
-                            },
-                            packages: [
-                                {
-                                    id: 'pkg_para_1',
-                                    createdTs: Date.now() - 7 * 24 * 3600 * 1000,
-                                    total: 20,
-                                    current: 12,
-                                    mark: 'Blister A',
-                                },
-                            ],
-                        },
-                        med_vitd3: {
-                            times: { morning: true, noon: false, evening: false, night: false },
-                            repeat: { type: 'everyXDays', every: 2 },
-                            dose: {
-                                mode: 'fixed',
-                                unit: 'cap',
-                                fixed: 1,
-                                perSlot: { morning: 1, noon: 1, evening: 1, night: 1 },
-                            },
-                            packages: [
-                                {
-                                    id: 'pkg_vitd3_1',
-                                    createdTs: Date.now() - 30 * 24 * 3600 * 1000,
-                                    total: 60,
-                                    current: 41,
-                                    mark: 'Dose',
-                                },
-                            ],
-                        },
-                    },
-                },
-            },
-            {
-                id: 'pat_erika',
-                name: 'Erika Musterfrau',
-                plan: {
-                    meds: {
-                        med_ibuprofen: {
-                            times: { morning: false, noon: true, evening: false, night: false },
-                            repeat: { type: 'weekly', every: 1 },
-                            dose: {
-                                mode: 'fixed',
-                                unit: 'tbl',
-                                fixed: 1,
-                                perSlot: { morning: 1, noon: 1, evening: 1, night: 1 },
-                            },
-                            packages: [
-                                {
-                                    id: 'pkg_ibu_1',
-                                    createdTs: Date.now() - 3 * 24 * 3600 * 1000,
-                                    total: 50,
-                                    current: 45,
-                                    mark: 'Schachtel rot',
-                                },
-                            ],
-                        },
-                    },
-                },
-            },
-        ];
-
-        (async () => {
-            try {
-                const dpMeds = await loadMedicationsFromDp();
-                const dpIndex = await loadPatientsIndexFromDp();
-
-                const hasAnyDpData = (dpMeds && dpMeds.length) || (dpIndex && dpIndex.length);
-
-                if (hasAnyDpData) {
-                    const loadedPatients = [];
-                    if (Array.isArray(dpIndex)) {
-                        for (const idx of dpIndex) {
-                            const stateId = idx?.stateId;
-                            if (!stateId) continue;
-
-                            const pObj = await loadPatientDataFromDp(stateId);
-                            if (pObj) loadedPatients.push(pObj);
-                        }
-                    }
-
-                    if (Array.isArray(dpMeds)) setMedications(dpMeds);
-                    if (loadedPatients.length) {
-                        setPatients(loadedPatients);
-                    } else if (Array.isArray(dpIndex) && dpIndex.length) {
-                        setPatients(dpIndex.map(i => ({ id: i.id, name: i.name, plan: { meds: {} } })));
-                    }
-
-                    return;
-                }
-
-                setMedications(seedMedications);
-                setPatients(seedPatients);
-
-                await persistMedications(seedMedications);
-                await persistPatientsIndex(seedPatients);
-                await persistPatientData(seedPatients[0]);
-                await persistPatientData(seedPatients[1]);
-            } catch (e) {
-                if (patientsRef.current.length || medications.length) return;
-
-                setMedications(seedMedications);
-                setPatients(seedPatients);
-
-                await persistMedications(seedMedications);
-                await persistPatientsIndex(seedPatients);
-                await persistPatientData(seedPatients[0]);
-                await persistPatientData(seedPatients[1]);
-            }
-        })();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-    // --- /INIT ---
-
+    // ---- INIT/SEED ausgelagert ----
+    // Diese Komponente führt den früheren useEffect-Block aus und rendert nichts.
+    // Sie braucht Zugriff auf Loader/Persister/Normalizer + State-Setter.
+    // --------------------------------
     const renderDetail = () => {
         switch (selected.type) {
             case 'intro':
@@ -586,6 +578,22 @@ function MedPlan(props) {
 
     return (
         <div style={classes.root}>
+            <MedPlanDataBootstrap
+                seededRef={seededRef}
+                patientsRef={patientsRef}
+                medications={medications}
+                setPatients={setPatients}
+                setMedications={setMedications}
+                loadMedicationsFromDp={loadMedicationsFromDp}
+                loadPatientsIndexFromDp={loadPatientsIndexFromDp}
+                loadPatientDataFromDp={loadPatientDataFromDp}
+                persistMedications={persistMedications}
+                persistPatientsIndex={persistPatientsIndex}
+                persistPatientData={persistPatientData}
+                normalizePatient={normalizePatient}
+                makeDefaultPlan={makeDefaultPlan}
+            />
+
             <Drawer
                 variant="permanent"
                 anchor="left"
