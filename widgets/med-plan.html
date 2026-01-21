@@ -146,7 +146,7 @@
                     </div>'
     data-vis-attrs="oidpatientOid/id;oidmedListOid/id[med-plan.0.medication];showPatientName/checkbox[true];daysPast/number,0,30,1[1];daysFuture/number,0,60,1[7];">
     <div class="vis-widget <%== this.data.attr('class') %>"
-         style="overflow:visible; scrollbar-width: none; width: 700px; height: 360px"
+         style="overflow:visible; scrollbar-width: none; -ms-overflow-style: none; width: 700px; height: 360px"
          id="<%= this.data.attr('wid') %>"
     >
         XXX<% vis.binds['med-plan'].createMultiDayPlanWidget(this.data.wid, this.view, this.data, this.style); %>

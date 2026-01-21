@@ -3,6 +3,7 @@
    - Derives neutrals from currentColor (inherits user theme foreground)
    - Keeps green/red accents but allows override via CSS variables
    - Includes fallback for environments without color-mix()
+   - Stabilizes table layout: buttons stay aligned even with dose text
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
@@ -11,6 +12,7 @@
 .med-plan-root {
     margin: 2px;
 }
+
 .med-plan-root,
 .mp-day-card,
 .mp-day {
@@ -20,7 +22,7 @@
     --mp-ok: #2e7d32;
     --mp-bad: #d32f2f;
 
-    /* NEW: focus accent for "today" + "current slot" highlight */
+    /* Focus accent for "today" + "current slot" highlight */
     --mp-accent: #00b4ff;
 
     /* Neutral surfaces derived from currentColor */
@@ -36,7 +38,7 @@
     --mp-bad-bg: color-mix(in srgb, var(--mp-bad) 16%, transparent);
     --mp-bad-border: color-mix(in srgb, var(--mp-bad) 40%, transparent);
 
-    /* NEW: derived accent surfaces */
+    /* Accent surfaces */
     --mp-accent-soft: color-mix(in srgb, var(--mp-accent) 100%, transparent);
     --mp-accent-border: color-mix(in srgb, var(--mp-accent) 55%, transparent);
 }
@@ -59,7 +61,6 @@
         --mp-bad-bg: rgba(211, 47, 47, 0.16);
         --mp-bad-border: rgba(211, 47, 47, 0.35);
 
-        /* NEW: accent fallbacks */
         --mp-accent: #00b4ff;
         --mp-accent-soft: rgba(0, 180, 255, 0.25);
         --mp-accent-border: rgba(0, 180, 255, 0.55);
@@ -89,13 +90,34 @@
     margin: 10px 0;
 }
 
-/* One card per day: border, spacing, subtle background */
+/* One card per day: border, spacing, subtle background
+   + IMPORTANT: reserve space for nav inside the card */
+/* One card per day: base styling (NO nav space by default) */
 .mp-day-card {
     border: 1px solid var(--mp-border);
     border-radius: 14px;
     padding: 10px;
     margin: 10px 0;
     background: var(--mp-surface);
+
+    position: relative; /* needed for absolute nav positioning */
+    padding-bottom: 10px; /* default: no extra space */
+}
+
+/* Add nav space ONLY if the nav is present inside this card */
+@supports selector(.mp-day-card:has(.mp-day-nav)) {
+    .mp-day-card:has(.mp-day-nav) {
+        padding-bottom: 56px; /* space for nav */
+    }
+}
+
+/* Fallback (no :has support):
+   - keep multi-day clean: no reserved nav space
+   - day view might overlap slightly if nav exists; you can solve that by adding a class in JS later */
+@supports not selector(.mp-day-card:has(.mp-day-nav)) {
+    .med-plan-root--multiday .mp-day-card {
+        padding-bottom: 10px;
+    }
 }
 
 /* Optional: slightly stronger separation in multiday lists */
@@ -104,77 +126,39 @@
 }
 
 /* --------------------------------------------------------------------------
-   NEW: "Today" highlight for multiday card
+   "Today" highlight for multiday card
    -------------------------------------------------------------------------- */
 .mp-day-card--today {
     border-color: var(--mp-accent-border);
     box-shadow: 0 0 0 2px var(--mp-accent-soft);
 }
 
-/* Optional: slightly stronger subtitle on today's card */
 .mp-day-card--today .med-plan-subtitle,
 .mp-day-card--today .mp-day-subtitle {
     font-weight: 600;
 }
 
 /* --------------------------------------------------------------------------
-   Header inside the day frame
+   Header
    -------------------------------------------------------------------------- */
-.mp-day-header {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 10px;
-}
-
-.mp-day-title {
-    font-weight: 700;
-    font-size: 14px;
-}
-
-.mp-day-subtitle {
-    font-size: 12px;
-    opacity: 0.8;
-    white-space: nowrap;
-}
-
-/* Ensure header lines are not too tall */
 .med-plan-header div {
     line-height: 1.2em;
 }
 
+/* Mini icons */
+.mp-mini-ic {
+    width: 14px;
+    height: 14px;
+    fill: currentColor;
+    opacity: 0.7;
+    margin-right: 4px;
+    vertical-align: -2px;
+    flex-shrink: 0;
+}
+
 /* --------------------------------------------------------------------------
-   Slots grid
+   Icons (slot icons inside mp-btn)
    -------------------------------------------------------------------------- */
-.mp-slots {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 12px;
-}
-
-/* Slot panels inside the day frame (optional, light separation) */
-.mp-slot {
-    border: 1px solid var(--mp-border-soft);
-    border-radius: 12px;
-    padding: 8px;
-    background: var(--mp-surface);
-}
-
-.mp-slot-head {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 6px;
-}
-
-.mp-slot-txt {
-    font-weight: 600;
-    font-size: 13px;
-    opacity: 0.85;
-}
-
-/* Icons: inherit from currentColor */
 .mp-ic {
     width: 22px;
     height: 22px;
@@ -183,28 +167,66 @@
 }
 
 /* --------------------------------------------------------------------------
-   Rows / meds
+   Medication name / packmark
    -------------------------------------------------------------------------- */
-.mp-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    padding: 4px 0;
-}
-
-.mp-med {
-    flex: 1;
+.med-plan-med-name {
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
-.mp-empty {
-    opacity: 0.4;
+.med-plan-med-name-main,
+.med-plan-med-packmark {
+    margin-right: 10px;
+}
+
+.med-plan-med-packmark {
+    margin-top: 2px;
     font-size: 12px;
-    font-style: italic;
-    padding: 6px 0;
+    opacity: 0.75;
+    line-height: 1.2;
+}
+
+/* --------------------------------------------------------------------------
+   Table layout stabilization
+   -------------------------------------------------------------------------- */
+.med-plan-table {
+    border-collapse: separate; /* keep cell backgrounds independent */
+    border-spacing: 0;
+    width: 100%;
+}
+
+.med-plan-row td {
+    vertical-align: top;
+}
+
+/* Cell: center content, keep stable height/width behavior */
+.med-plan-cell,
+.med-plan-cell--disabled {
+    text-align: center;
+    /* padding: 4px 6px; */
+    vertical-align: top;
+}
+
+/* Provide a mini layout stack per cell: button + dose aligned */
+.med-plan-cell .mp-btn,
+.med-plan-cell--disabled .mp-btn {
+    display: block;
+    margin: 0 auto;
+}
+
+/* Dose: always reserve the same height, so buttons align */
+.mp-dose {
+    display: block;
+    font-size: 70%;
+    text-align: center;
+    min-height: 16px; /* reserve space even if empty */
+    line-height: 16px;
+    margin-top: 2px;
+    opacity: 0.85;
+}
+
+/* if doseText is empty: keep spacing with NBSP */
+.mp-dose:empty::after {
+    content: '\00a0';
 }
 
 /* --------------------------------------------------------------------------
@@ -231,71 +253,12 @@
     cursor: wait;
 }
 
-.mp-btn:disabled {
-    pointer-events: none;
-}
-
 /* Disabled button */
 .mp-btn--disabled {
     background: var(--mp-surface);
     border-color: var(--mp-border);
     cursor: default;
     opacity: 0.55;
-}
-
-/* --------------------------------------------------------------------------
-   NEW: Current slot highlight (button + surrounding parts)
-   -------------------------------------------------------------------------- */
-
-/* Subtle cell background so the column is visually guided (optional) */
-.med-plan-cell--current-slot {
-    background: color-mix(in srgb, var(--mp-accent) 6%, transparent);
-}
-@supports not (color: color-mix(in srgb, black 10%, transparent)) {
-    .med-plan-cell--current-slot {
-        background: rgba(0, 180, 255, 0.06);
-    }
-}
-
-/* Focus ring + glow around the current slot button */
-.mp-btn--current-slot {
-    outline: 2px solid var(--mp-accent-border);
-    outline-offset: 2px;
-    box-shadow: 0 0 10px var(--mp-accent-soft);
-    animation: mpPulse 1.8s ease-in-out infinite;
-}
-
-/* Do not animate disabled "current slot" buttons (looks noisy) */
-.mp-btn--disabled.mp-btn--current-slot {
-    animation: none;
-    box-shadow: 0 0 6px var(--mp-accent-soft);
-    outline-color: var(--mp-accent-border);
-}
-
-/* Dose text under button also emphasized */
-.mp-dose--current-slot {
-    font-weight: 600;
-    text-shadow: 0 0 8px var(--mp-accent-soft);
-}
-
-/* Pulse animation (subtle) */
-@keyframes mpPulse {
-    0% {
-        box-shadow: 0 0 6px var(--mp-accent-soft);
-    }
-    50% {
-        box-shadow: 0 0 14px var(--mp-accent-soft);
-    }
-    100% {
-        box-shadow: 0 0 6px var(--mp-accent-soft);
-    }
-}
-
-/* Reduce motion preference */
-@media (prefers-reduced-motion: reduce) {
-    .mp-btn--current-slot {
-        animation: none;
-    }
 }
 
 /* --------------------------------------------------------------------------
@@ -320,16 +283,74 @@
 }
 
 /* --------------------------------------------------------------------------
+   Current slot highlight (button + surrounding parts)
+   -------------------------------------------------------------------------- */
+.med-plan-cell--current-slot {
+    background: color-mix(in srgb, var(--mp-accent) 6%, transparent);
+}
+
+@supports not (color: color-mix(in srgb, black 10%, transparent)) {
+    .med-plan-cell--current-slot {
+        background: rgba(0, 180, 255, 0.06);
+    }
+}
+
+/* Ring + glow; use box-shadow only (outline can shift visuals in tables) */
+.mp-btn--current-slot {
+    box-shadow:
+        0 0 0 2px var(--mp-accent-border),
+        0 0 10px var(--mp-accent-soft);
+    animation: mpPulse 1.8s ease-in-out infinite;
+}
+
+/* Disabled current-slot: no pulse */
+.mp-btn--disabled.mp-btn--current-slot {
+    animation: none;
+    box-shadow:
+        0 0 0 2px var(--mp-accent-border),
+        0 0 6px var(--mp-accent-soft);
+}
+
+/* Dose emphasis for current slot */
+.mp-dose--current-slot {
+    font-weight: 600;
+    text-shadow: 0 0 8px var(--mp-accent-soft);
+}
+
+/* Pulse animation */
+@keyframes mpPulse {
+    0% {
+        box-shadow:
+            0 0 0 2px var(--mp-accent-border),
+            0 0 6px var(--mp-accent-soft);
+    }
+    50% {
+        box-shadow:
+            0 0 0 2px var(--mp-accent-border),
+            0 0 14px var(--mp-accent-soft);
+    }
+    100% {
+        box-shadow:
+            0 0 0 2px var(--mp-accent-border),
+            0 0 6px var(--mp-accent-soft);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mp-btn--current-slot {
+        animation: none;
+    }
+}
+
+/* --------------------------------------------------------------------------
    Note row (full width cell)
    -------------------------------------------------------------------------- */
 .med-plan-note-cell {
-    padding-bottom: 1.2em;
+    /* padding-bottom: 1.2em; */
 }
 
-/* Optional styling for the note content (if you wrap it in <div class="med-plan-note">.. */
 .med-plan-note {
     background: var(--mp-surface-2);
-    /* border-left: 3px solid var(--mp-border); */
     border-radius: 8px;
     padding: 6px 8px;
     color: currentColor;
@@ -337,58 +358,50 @@
     white-space: pre-wrap;
 }
 
-.med-plan-med-packmark {
-    margin-top: 2px;
-    font-size: 12px;
-    opacity: 0.75;
-    line-height: 1.2;
+/* --------------------------------------------------------------------------
+   Day navigation (INSIDE mp-day-card, bottom-left)
+   -------------------------------------------------------------------------- */
+.mp-day-nav {
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    z-index: 5;
 }
 
-.mp-mini-ic {
-    width: 14px;
-    height: 14px;
+/* Nav buttons */
+.mp-nav-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-surface);
+    color: currentColor;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    padding: 0;
+}
+
+.mp-nav-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+/* Nav SVG icons */
+.mp-nav-ic {
+    width: 18px;
+    height: 18px;
     fill: currentColor;
-    opacity: 0.7;
-    margin-right: 4px;
-    vertical-align: -2px;
-    flex-shrink: 0;
+    opacity: 0.85;
 }
 
-.med-plan-med-name-main,
-.med-plan-med-packmark {
-    margin-right: 10px;
-}
-
-.med-plan-med-name {
-    white-space: nowrap;
-}
-
-.mp-dose {
-    display: block;
-    font-size: 70%;
-    text-align: center;
-    min-height: 16px; /* reserve space even if empty */
-    line-height: 16px;
-    margin-top: 2px;
-}
-/* Wenn keine Dosis vorhanden ist */
-.mp-dose:empty::after {
-    content: '\00a0'; /* non-breaking space */
-}
-.med-plan-cell,
-.med-plan-cell--disabled {
-    vertical-align: top;
-    text-align: center;
-    padding-top: 4px;
-    padding-bottom: 4px;
-}
-.med-plan-cell .mp-btn,
-.med-plan-cell--disabled .mp-btn {
-    display: block;
-    margin: 0 auto;
-}
-.med-plan-cell--disabled::after {
-    content: '';
-    display: block;
-    height: 18px; /* ~min-height + margin-top */
+/* Optional: make "today" nav button slightly more prominent */
+.mp-nav-btn--today:not(:disabled) {
+    box-shadow: 0 0 0 1px var(--mp-border-soft);
 }

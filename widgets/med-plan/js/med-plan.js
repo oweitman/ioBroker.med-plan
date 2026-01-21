@@ -59,7 +59,9 @@ vis.binds['med-plan'] = {
             overflowX: 'hidden',
         });
         var mode = opts && opts.mode ? opts.mode : 'day';
-
+        if (mode === 'day' && typeof $div.data('dayOffset') !== 'number') {
+            $div.data('dayOffset', 0);
+        }
         // Required inputs
         var patientOid = data.oidpatientOid;
         var medListOid = data.oidmedListOid || 'med-plan.0.medication';
@@ -101,14 +103,31 @@ vis.binds['med-plan'] = {
                 $div.html('<div class="med-plan-error">Patientendaten fehlen oder sind ungültig.</div>');
                 return;
             }
-
             var now = new Date();
+            // ---- bounds for day navigation ----
+            var bounds = vis.binds['med-plan']._getDayNavBounds(patientObj, now);
+            $div.data('dayNavBounds', bounds);
+
+            // clamp current offset into bounds
+            if (mode === 'day') {
+                var cur = $div.data('dayOffset') || 0;
+                if (cur < bounds.minOffset) cur = bounds.minOffset;
+                if (cur > bounds.maxOffset) cur = bounds.maxOffset;
+                $div.data('dayOffset', cur);
+            }
+
             var currentSlotKey = vis.binds['med-plan']._getCurrentSlotKey(patientObj, slots, now);
             var base = new Date(now.getFullYear(), now.getMonth(), now.getDate()); // today 00:00 local
+            var dayOffset = mode === 'day' ? ($div.data('dayOffset') || 0) : 0;
+            if (mode === 'day' && dayOffset) {
+                base.setDate(base.getDate() + dayOffset);
+            }
 
             if (mode === 'day') {
                 var ymdKey = vis.binds['med-plan']._formatDateLocalYYYYMMDD(base);
                 var ymdLabel = vis.binds['med-plan']._formatDateLocalized(base);
+
+                var isToday = (dayOffset === 0);
 
                 var inner = vis.binds['med-plan']._renderDayTable(
                     patientVM,
@@ -118,19 +137,28 @@ vis.binds['med-plan'] = {
                     ymdLabel,
                     showPatientName,
                     slots,
-                    { isToday: true, currentSlotKey: currentSlotKey }
+                    { isToday: isToday, currentSlotKey: currentSlotKey }
                 );
 
-                $div.html(`<div class="med-plan-root">${vis.binds['med-plan']._wrapDayCard(inner, { isToday: true })}</div>`);
+                var b = $div.data('dayNavBounds') || { minOffset: 0, maxOffset: 7 };
+                var nav = vis.binds['med-plan']._renderDayNav($div.data('dayOffset') || 0, b);
+
+                var innerWithNav = inner + nav;
+
+                $div.html(
+                    `<div class="med-plan-root">
+            ${vis.binds['med-plan']._wrapDayCard(innerWithNav, { isToday: isToday })}
+        </div>`
+                );
             } else {
                 var html = '<div class="med-plan-root med-plan-root--multiday">';
 
                 // Optional patient name once at top
                 if (showPatientName && patientVM.name) {
                     html += `<div class="med-plan-header"><div class="med-plan-title">
-                        ${vis.binds['med-plan']._mpMiniIcons.patient}
-                        ${vis.binds['med-plan']._escapeHtml(patientVM.name)}
-                    </div></div>`;
+            ${vis.binds['med-plan']._mpMiniIcons.patient}
+            ${vis.binds['med-plan']._escapeHtml(patientVM.name)}
+        </div></div>`;
                 }
 
                 for (var d = -daysPast; d <= daysFuture; d++) {
@@ -139,24 +167,27 @@ vis.binds['med-plan'] = {
 
                     var ymdKey2 = vis.binds['med-plan']._formatDateLocalYYYYMMDD(day);
                     var ymdLabel2 = vis.binds['med-plan']._formatDateLocalized(day);
-                    var isToday = d === 0;
+
+                    var isToday2 = (d === 0);
+
                     var inner2 = vis.binds['med-plan']._renderDayTable(
                         patientVM,
                         patientObj,
                         day,
                         ymdKey2,
                         ymdLabel2,
-                        false, // avoid repeating patient name per day if already shown above
+                        false,
                         slots,
-                        { isToday: isToday, currentSlotKey: currentSlotKey }
+                        { isToday: isToday2, currentSlotKey: currentSlotKey }
                     );
 
-                    html += vis.binds['med-plan']._wrapDayCard(inner2, { isToday: isToday });
+                    html += vis.binds['med-plan']._wrapDayCard(inner2, { isToday: isToday2 });
                 }
 
                 html += '</div>';
                 $div.html(html);
             }
+
         }
 
         rerender();
@@ -213,6 +244,25 @@ vis.binds['med-plan'] = {
             } finally {
                 $btn.prop('disabled', false).removeClass('mp-btn--busy');
             }
+        });
+        $div.off('click.medplanNav').on('click.medplanNav', '.mp-nav-btn', function () {
+            if (mode !== 'day') return;
+
+            var action = $(this).data('action'); // prev | today | next
+            var b = $div.data('dayNavBounds') || { minOffset: 0, maxOffset: 7 };
+
+            var cur = $div.data('dayOffset') || 0;
+            var next = cur;
+
+            if (action === 'today') next = 0;
+            else if (action === 'prev') next = cur - 1;
+            else if (action === 'next') next = cur + 1;
+
+            if (next < b.minOffset) next = b.minOffset;
+            if (next > b.maxOffset) next = b.maxOffset;
+
+            $div.data('dayOffset', next);
+            rerender();
         });
 
         // Subscribe to state updates
@@ -820,6 +870,89 @@ vis.binds['med-plan'] = {
             else break;
         }
         return current;
+    },
+    _getDayNavBounds: function (patientObj, now) {
+        now = now || new Date();
+        var today0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        var msPerDay = 24 * 60 * 60 * 1000;
+
+        // --- earliest intake date (YYYY-MM-DD keys) ---
+        var minIntake = null;
+        try {
+            var intake = patientObj && patientObj.plan && patientObj.plan.intake ? patientObj.plan.intake : null;
+            if (intake && typeof intake === 'object') {
+                var keys = Object.keys(intake);
+                for (var i = 0; i < keys.length; i++) {
+                    var k = keys[i];
+                    if (!/^\d{4}-\d{2}-\d{2}$/.test(k)) continue;
+                    var d = new Date(k + 'T00:00:00');
+                    if (!minIntake || d < minIntake) minIntake = d;
+                }
+            }
+        } catch /*(e)*/ { /* empty */ }
+
+        // --- plan start (optional, try common field names) ---
+        var planStart = null;
+        try {
+            var p = patientObj && patientObj.plan ? patientObj.plan : null;
+            var raw = p ? (p.start || p.startDate || p.startYmd || p.planStart || null) : null;
+
+            if (typeof raw === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+                planStart = new Date(raw + 'T00:00:00');
+            } else if (typeof raw === 'number' && Number.isFinite(raw)) {
+                var tmp = new Date(raw);
+                planStart = new Date(tmp.getFullYear(), tmp.getMonth(), tmp.getDate());
+            }
+        } catch /*(e)*/ { /* empty */ }
+
+        // effective minimum date = later of (planStart, minIntake) if both exist
+        var effectiveMin = null;
+        if (planStart && minIntake) effectiveMin = planStart > minIntake ? planStart : minIntake;
+        else effectiveMin = planStart || minIntake || today0;
+
+        var minOffset = Math.round((effectiveMin.getTime() - today0.getTime()) / msPerDay);
+        if (minOffset > 0) minOffset = 0; // do not force future-only navigation
+
+        return { minOffset: minOffset, maxOffset: 7 };
+    },
+
+    _renderDayNav: function (curOffset, bounds) {
+        bounds = bounds || { minOffset: 0, maxOffset: 7 };
+        curOffset = typeof curOffset === 'number' ? curOffset : 0;
+
+        var prevDisabled = curOffset <= bounds.minOffset;
+        var nextDisabled = curOffset >= bounds.maxOffset;
+        var todayDisabled = curOffset === 0;
+
+        var ic = vis.binds['med-plan']._navIcons;
+
+        return (
+            '<div class="mp-day-nav" role="group" aria-label="Day navigation">' +
+            '<button type="button" class="mp-nav-btn" data-action="prev" ' + (prevDisabled ? 'disabled' : '') + ' aria-label="Previous day">' +
+            ic.left +
+            '</button>' +
+            '<button type="button" class="mp-nav-btn mp-nav-btn--today" data-action="today" ' + (todayDisabled ? 'disabled' : '') + ' aria-label="Today">' +
+            ic.today +
+            '</button>' +
+            '<button type="button" class="mp-nav-btn" data-action="next" ' + (nextDisabled ? 'disabled' : '') + ' aria-label="Next day">' +
+            ic.right +
+            '</button>' +
+            '</div>'
+        );
+    },
+    _navIcons: {
+        left:
+            '<svg class="mp-nav-ic" viewBox="0 0 24 24" aria-hidden="true">' +
+            '<path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>' +
+            '</svg>',
+        right:
+            '<svg class="mp-nav-ic" viewBox="0 0 24 24" aria-hidden="true">' +
+            '<path d="M8.59 16.59 10 18l6-6-6-6-1.41 1.41L13.17 12z"/>' +
+            '</svg>',
+        today:
+            '<svg class="mp-nav-ic" viewBox="0 0 24 24" aria-hidden="true">' +
+            '<path d="M12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10z"/>' +
+            '</svg>',
     },
 
     _icons: {

@@ -150,12 +150,12 @@ Please refer to the [`dev-server` documentation](https://github.com/ioBroker/dev
 - ok, trigger reminders for doses
 - ok, Im Bericht einen Eintrag/Fehleinnahme löschen + suche und filterung
 - ok, Im widget den aktuellen Einnahmeslot leuchtend markieren
+- ok, Im Day-widget navigationspfeile für nächster Tag/vorheriger Tag
 - Calculate dose reliability
 - Re-order reminder function
 - More options for intake schedule
 - Optional expansion of medication tracking with detailed information
 - More layout options
-- Im Day-widget navigationspfeile für nächster Tag/vorheriger Tag
 - Im widget den nächsten Eingabeslot mit Uhrzeit und Zeitraum anzeigen. (Uhrzeit von/bis)
 - wenn Medikament aus der generellen Liste wie auch aus dem Plan gelöscht wird, werden auch die zugehörigen Einnahmezeiten gelöscht.
 
