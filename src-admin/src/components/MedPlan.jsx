@@ -438,6 +438,71 @@ function MedPlan(props) {
     );
 
     // ---------- UI actions ----------
+    /**
+     * Entfernt ein Medikament aus Patient.plan.meds und Patient.plan.intake (History).
+     * Gibt { nextPatient, changed } zurück.
+     * @param {any} patient
+     * @param {string} medId
+     */
+    const removeMedicationReferencesFromPatient = (patient, medId) => {
+        if (!patient || typeof patient !== 'object') return { nextPatient: patient, changed: false };
+
+        const plan = patient.plan && typeof patient.plan === 'object' ? patient.plan : null;
+        if (!plan) return { nextPatient: patient, changed: false };
+
+        let changed = false;
+
+        // ----- 1) plan.meds -----
+        let nextMeds = plan.meds && typeof plan.meds === 'object' ? plan.meds : {};
+        if (Object.prototype.hasOwnProperty.call(nextMeds, medId)) {
+            nextMeds = { ...nextMeds };
+            delete nextMeds[medId];
+            changed = true;
+        }
+
+        // ----- 2) plan.intake (History) -----
+        let nextIntake = plan.intake && typeof plan.intake === 'object' ? plan.intake : null;
+        if (nextIntake && typeof nextIntake === 'object') {
+            // Wir klonen "intake" nur, wenn wir wirklich etwas löschen.
+            let intakeMut = nextIntake;
+
+            for (const ymd of Object.keys(nextIntake)) {
+                const day = nextIntake[ymd];
+                if (!day || typeof day !== 'object') continue;
+
+                if (!Object.prototype.hasOwnProperty.call(day, medId)) continue;
+
+                // ab hier löschen wir wirklich -> ensure clone
+                if (intakeMut === nextIntake) intakeMut = { ...nextIntake };
+
+                const nextDay = { ...day };
+                delete nextDay[medId];
+                changed = true;
+
+                if (Object.keys(nextDay).length === 0) {
+                    delete intakeMut[ymd];
+                } else {
+                    intakeMut[ymd] = nextDay;
+                }
+            }
+
+            // Wenn wir geklont haben, übernehmen wir es
+            if (intakeMut !== nextIntake) {
+                nextIntake = intakeMut;
+            }
+        }
+
+        if (!changed) return { nextPatient: patient, changed: false };
+
+        const nextPlan = {
+            ...plan,
+            meds: nextMeds,
+            intake: nextIntake ?? plan.intake,
+        };
+
+        const nextPatient = { ...patient, plan: nextPlan };
+        return { nextPatient, changed: true };
+    };
     const addPatient = React.useCallback(
         async name => {
             const n = String(name || '').trim();
@@ -501,11 +566,49 @@ function MedPlan(props) {
 
     const deleteMedication = React.useCallback(
         async medId => {
-            const next = medications.filter(m => m.id !== medId);
-            setMedications(next);
-            await persistMedications(next);
+            // 1) Keine pending writes nach dem Delete "zurücklaufen" lassen
+            await flushPatientPersists();
+
+            // 2) Globales Medication-Array aktualisieren
+            const nextMeds = medications.filter(m => m.id !== medId);
+
+            // 3) Patienten bereinigen (Plan + History)
+            const currentPatients = patientsRef.current;
+            const changedPatients = [];
+            const nextPatients = currentPatients.map(p => {
+                const { nextPatient, changed } = removeMedicationReferencesFromPatient(p, medId);
+                if (changed) {
+                    // normalisieren, damit Struktur konsistent bleibt
+                    const normalized = normalizePatient(nextPatient) || nextPatient;
+                    changedPatients.push(normalized);
+                    return normalized;
+                }
+                return p;
+            });
+
+            // 4) State setzen
+            setMedications(nextMeds);
+            setPatients(nextPatients);
+
+            // 5) Persist: meds + betroffene Patienten (Index bleibt unverändert)
+            await persistMedications(nextMeds);
+
+            // Optional: pending queue "aufräumen", damit nichts "altes" später persistiert
+            pendingPatientsRef.current.clear();
+            pendingIndexDirtyRef.current = false;
+
+            for (const p of changedPatients) {
+                await persistPatientData(p);
+            }
         },
-        [medications, persistMedications],
+        [
+            medications,
+            flushPatientPersists,
+            normalizePatient,
+            persistMedications,
+            persistPatientData,
+            removeMedicationReferencesFromPatient,
+        ],
     );
 
     const updatePatient = React.useCallback(
