@@ -128,5 +128,9 @@
     "Add threshold": "Add threshold",
     "lte (minutes)": "lte (minutes)",
     "Level": "Level",
-    "Delete": "Delete"
+    "Delete": "Delete",
+    "Search": "Search",
+    "All": "All",
+    "Clear filters": "Clear filters",
+    "Actions": "Actions"
 }
