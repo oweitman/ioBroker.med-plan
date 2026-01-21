@@ -103,6 +103,7 @@ vis.binds['med-plan'] = {
             }
 
             var now = new Date();
+            var currentSlotKey = vis.binds['med-plan']._getCurrentSlotKey(patientObj, slots, now);
             var base = new Date(now.getFullYear(), now.getMonth(), now.getDate()); // today 00:00 local
 
             if (mode === 'day') {
@@ -117,9 +118,10 @@ vis.binds['med-plan'] = {
                     ymdLabel,
                     showPatientName,
                     slots,
+                    { isToday: true, currentSlotKey: currentSlotKey }
                 );
 
-                $div.html(`<div class="med-plan-root">${vis.binds['med-plan']._wrapDayCard(inner)}</div>`);
+                $div.html(`<div class="med-plan-root">${vis.binds['med-plan']._wrapDayCard(inner, { isToday: true })}</div>`);
             } else {
                 var html = '<div class="med-plan-root med-plan-root--multiday">';
 
@@ -137,7 +139,7 @@ vis.binds['med-plan'] = {
 
                     var ymdKey2 = vis.binds['med-plan']._formatDateLocalYYYYMMDD(day);
                     var ymdLabel2 = vis.binds['med-plan']._formatDateLocalized(day);
-
+                    var isToday = d === 0;
                     var inner2 = vis.binds['med-plan']._renderDayTable(
                         patientVM,
                         patientObj,
@@ -146,9 +148,10 @@ vis.binds['med-plan'] = {
                         ymdLabel2,
                         false, // avoid repeating patient name per day if already shown above
                         slots,
+                        { isToday: isToday, currentSlotKey: currentSlotKey }
                     );
 
-                    html += vis.binds['med-plan']._wrapDayCard(inner2);
+                    html += vis.binds['med-plan']._wrapDayCard(inner2, { isToday: isToday });
                 }
 
                 html += '</div>';
@@ -237,8 +240,11 @@ vis.binds['med-plan'] = {
     // ---------------------------
     // Day Card wrapper
     // ---------------------------
-    _wrapDayCard: function (innerHtml) {
-        return `<div class="mp-day-card">${innerHtml}</div>`;
+    _wrapDayCard: function (innerHtml, opts) {
+        opts = opts || {};
+        var cls = 'mp-day-card';
+        if (opts.isToday) cls += ' mp-day-card--today';
+        return `<div class="${cls}">${innerHtml}</div>`;
     },
 
     // ---------------------------
@@ -482,7 +488,10 @@ vis.binds['med-plan'] = {
         return res;
     },
 
-    _renderDayTable: function (patientVM, patientObj, dt, ymdKey, ymdLabel, showPatientName, slots) {
+    _renderDayTable: function (patientVM, patientObj, dt, ymdKey, ymdLabel, showPatientName, slots, ctx) {
+        ctx = ctx || {};
+        var isToday = !!ctx.isToday;
+        var currentSlotKey = ctx.currentSlotKey || null;
         var html = '';
 
         slots = Array.isArray(slots) ? slots : vis.binds['med-plan']._getSlotsForPatientSorted(patientObj);
@@ -564,11 +573,12 @@ vis.binds['med-plan'] = {
 
             for (var j = 0; j < slots.length; j++) {
                 var slot = slots[j];
+                var isCurrentSlot = isToday && currentSlotKey && slot.key === currentSlotKey;
                 var enabled = !!(med.intakeTimes && med.intakeTimes[slot.key]);
 
                 if (!enabled) {
-                    html += '<td class="med-plan-cell med-plan-cell--disabled">';
-                    html += `<button type="button" class="mp-btn mp-btn--disabled" disabled aria-label="${vis.binds['med-plan']._escapeAttr(slot.label || slot.key)}">`;
+                    html += `<td class="med-plan-cell med-plan-cell--disabled${isCurrentSlot ? ' med-plan-cell--current-slot' : ''}">`;
+                    html += `<button type="button" class="mp-btn mp-btn--disabled${isCurrentSlot ? ' mp-btn--current-slot' : ''}" disabled aria-label="${vis.binds['med-plan']._escapeAttr(slot.label || slot.key)}">`;
                     html += '</button>';
                     html += '</td>';
                     continue;
@@ -600,9 +610,9 @@ vis.binds['med-plan'] = {
                 } catch /* (e) */ {
                     doseText = '';
                 }
-                html += '<td class="med-plan-cell">';
+                html += `<td class="med-plan-cell${isCurrentSlot ? ' med-plan-cell--current-slot' : ''}">`;
                 html +=
-                    `<button type="button" class="mp-btn mp-state-${state}"` +
+                    `<button type="button" class="mp-btn mp-state-${state}${isCurrentSlot ? ' mp-btn--current-slot' : ''}"` +
                     ` data-date="${vis.binds['med-plan']._escapeAttr(ymdKey)}"` +
                     ` data-med="${vis.binds['med-plan']._escapeAttr(med.medicationId)}"` +
                     ` data-slot="${vis.binds['med-plan']._escapeAttr(slot.key)}"` +
@@ -613,7 +623,7 @@ vis.binds['med-plan'] = {
 
                 html += '</button>';
                 // Dose under the button (per slot)
-                html += `<div class="mp-dose">${vis.binds['med-plan']._escapeHtml(doseText)}</div>`;
+                html += `<div class="mp-dose${isCurrentSlot ? ' mp-dose--current-slot' : ''}">${vis.binds['med-plan']._escapeHtml(doseText)}</div>`;
                 html += '</td>';
             }
 
@@ -773,6 +783,45 @@ vis.binds['med-plan'] = {
         // zusammenbauen
         return slots.concat(rest).concat(prn);
     },
+    _getCurrentSlotKey: function (patientObj, slots, now) {
+        now = now || new Date();
+        slots = Array.isArray(slots) ? slots : vis.binds['med-plan']._getSlotsForPatientSorted(patientObj);
+
+        var nowMin = now.getHours() * 60 + now.getMinutes();
+
+        // PRN ausklammern (soll i.d.R. nicht „aktueller Slot“ sein)
+        var candidates = [];
+        for (var i = 0; i < slots.length; i++) {
+            var s = slots[i];
+            var type = String(s.type || '');
+            if (type === 'prn' || s.key === 'prn') continue;
+
+            // bevorzugt: time aus slotDefs (HH:MM)
+            var def = vis.binds['med-plan']._getSlotDef(patientObj, s.key);
+            var t = def && def.time ? def.time : s.time; // falls du s.time bereits normalisiert hast
+            var m = vis.binds['med-plan']._timeToMinutes(t);
+
+            if (m == null) continue;
+            candidates.push({ key: s.key, minutes: m });
+        }
+
+        if (!candidates.length) {
+            // Fallback: ohne Zeiten -> keine Highlight-Entscheidung
+            return null;
+        }
+
+        // Sort by time
+        candidates.sort(function (a, b) { return a.minutes - b.minutes; });
+
+        // „aktuell“ = letzte Slot-Zeit <= jetzt, sonst erster Slot (früh am Tag)
+        var current = candidates[0].key;
+        for (var j = 0; j < candidates.length; j++) {
+            if (candidates[j].minutes <= nowMin) current = candidates[j].key;
+            else break;
+        }
+        return current;
+    },
+
     _icons: {
         morning:
             '<svg class="mp-ic" focusable="false" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79 1.42-1.41zM4 10.5H1v2h3v-2zm9-9.95h-2V3.5h2V.55zm7.45 3.91l-1.41-1.41-1.79 1.79 1.41 1.41 1.79-1.79zm-3.21 13.7l1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4zM20 10.5v2h3v-2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm-1 16.95h2V19.5h-2v2.95zm-7.45-3.91l1.41 1.41 1.79-1.8-1.41-1.41-1.79 1.8z"></path></svg>',

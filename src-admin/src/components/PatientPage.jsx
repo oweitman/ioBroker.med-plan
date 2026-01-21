@@ -725,6 +725,7 @@ export default function PatientPage(props) {
                 patient={patient}
                 medications={medications}
                 slots={slots}
+                onUpdatePatient={onUpdatePatient}
             />
         </Box>
     );

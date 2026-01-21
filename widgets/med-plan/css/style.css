@@ -8,6 +8,9 @@
 /* --------------------------------------------------------------------------
    Theme adapter / variables
    -------------------------------------------------------------------------- */
+.med-plan-root {
+    margin: 2px;
+}
 .med-plan-root,
 .mp-day-card,
 .mp-day {
@@ -16,6 +19,9 @@
     /* Accent colors (overrideable by user) */
     --mp-ok: #2e7d32;
     --mp-bad: #d32f2f;
+
+    /* NEW: focus accent for "today" + "current slot" highlight */
+    --mp-accent: #00b4ff;
 
     /* Neutral surfaces derived from currentColor */
     --mp-border: color-mix(in srgb, currentColor 22%, transparent);
@@ -29,6 +35,10 @@
     --mp-ok-border: color-mix(in srgb, var(--mp-ok) 40%, transparent);
     --mp-bad-bg: color-mix(in srgb, var(--mp-bad) 16%, transparent);
     --mp-bad-border: color-mix(in srgb, var(--mp-bad) 40%, transparent);
+
+    /* NEW: derived accent surfaces */
+    --mp-accent-soft: color-mix(in srgb, var(--mp-accent) 100%, transparent);
+    --mp-accent-border: color-mix(in srgb, var(--mp-accent) 55%, transparent);
 }
 
 /* Fallback for environments without color-mix() support */
@@ -48,6 +58,11 @@
         --mp-ok-border: rgba(46, 125, 50, 0.35);
         --mp-bad-bg: rgba(211, 47, 47, 0.16);
         --mp-bad-border: rgba(211, 47, 47, 0.35);
+
+        /* NEW: accent fallbacks */
+        --mp-accent: #00b4ff;
+        --mp-accent-soft: rgba(0, 180, 255, 0.25);
+        --mp-accent-border: rgba(0, 180, 255, 0.55);
     }
 }
 
@@ -86,6 +101,20 @@
 /* Optional: slightly stronger separation in multiday lists */
 .med-plan-root--multiday .mp-day-card {
     margin: 12px 0;
+}
+
+/* --------------------------------------------------------------------------
+   NEW: "Today" highlight for multiday card
+   -------------------------------------------------------------------------- */
+.mp-day-card--today {
+    border-color: var(--mp-accent-border);
+    box-shadow: 0 0 0 2px var(--mp-accent-soft);
+}
+
+/* Optional: slightly stronger subtitle on today's card */
+.mp-day-card--today .med-plan-subtitle,
+.mp-day-card--today .mp-day-subtitle {
+    font-weight: 600;
 }
 
 /* --------------------------------------------------------------------------
@@ -215,6 +244,61 @@
 }
 
 /* --------------------------------------------------------------------------
+   NEW: Current slot highlight (button + surrounding parts)
+   -------------------------------------------------------------------------- */
+
+/* Subtle cell background so the column is visually guided (optional) */
+.med-plan-cell--current-slot {
+    background: color-mix(in srgb, var(--mp-accent) 6%, transparent);
+}
+@supports not (color: color-mix(in srgb, black 10%, transparent)) {
+    .med-plan-cell--current-slot {
+        background: rgba(0, 180, 255, 0.06);
+    }
+}
+
+/* Focus ring + glow around the current slot button */
+.mp-btn--current-slot {
+    outline: 2px solid var(--mp-accent-border);
+    outline-offset: 2px;
+    box-shadow: 0 0 10px var(--mp-accent-soft);
+    animation: mpPulse 1.8s ease-in-out infinite;
+}
+
+/* Do not animate disabled "current slot" buttons (looks noisy) */
+.mp-btn--disabled.mp-btn--current-slot {
+    animation: none;
+    box-shadow: 0 0 6px var(--mp-accent-soft);
+    outline-color: var(--mp-accent-border);
+}
+
+/* Dose text under button also emphasized */
+.mp-dose--current-slot {
+    font-weight: 600;
+    text-shadow: 0 0 8px var(--mp-accent-soft);
+}
+
+/* Pulse animation (subtle) */
+@keyframes mpPulse {
+    0% {
+        box-shadow: 0 0 6px var(--mp-accent-soft);
+    }
+    50% {
+        box-shadow: 0 0 14px var(--mp-accent-soft);
+    }
+    100% {
+        box-shadow: 0 0 6px var(--mp-accent-soft);
+    }
+}
+
+/* Reduce motion preference */
+@media (prefers-reduced-motion: reduce) {
+    .mp-btn--current-slot {
+        animation: none;
+    }
+}
+
+/* --------------------------------------------------------------------------
    States: 0 neutral, 1 taken, 2 missed
    - We set "color" so SVGs (fill: currentColor) automatically match state
    -------------------------------------------------------------------------- */
@@ -252,12 +336,14 @@
     opacity: 0.85;
     white-space: pre-wrap;
 }
+
 .med-plan-med-packmark {
     margin-top: 2px;
     font-size: 12px;
     opacity: 0.75;
     line-height: 1.2;
 }
+
 .mp-mini-ic {
     width: 14px;
     height: 14px;
@@ -267,14 +353,42 @@
     vertical-align: -2px;
     flex-shrink: 0;
 }
+
 .med-plan-med-name-main,
 .med-plan-med-packmark {
     margin-right: 10px;
 }
+
 .med-plan-med-name {
     white-space: nowrap;
 }
+
 .mp-dose {
+    display: block;
     font-size: 70%;
     text-align: center;
+    min-height: 16px; /* reserve space even if empty */
+    line-height: 16px;
+    margin-top: 2px;
+}
+/* Wenn keine Dosis vorhanden ist */
+.mp-dose:empty::after {
+    content: '\00a0'; /* non-breaking space */
+}
+.med-plan-cell,
+.med-plan-cell--disabled {
+    vertical-align: top;
+    text-align: center;
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
+.med-plan-cell .mp-btn,
+.med-plan-cell--disabled .mp-btn {
+    display: block;
+    margin: 0 auto;
+}
+.med-plan-cell--disabled::after {
+    content: '';
+    display: block;
+    height: 18px; /* ~min-height + margin-top */
 }
