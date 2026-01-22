@@ -132,5 +132,22 @@
     "Search": "Search",
     "All": "All",
     "Clear filters": "Clear filters",
-    "Actions": "Actions"
+    "Actions": "Actions",
+    "Weeks": "Weeks",
+    "Print": "Print",
+    "Week": "Week",
+    "Pill organizer": "Pill organizer",
+    "Start": "Start",
+    "Pillbox mode": "Pillbox mode",
+    "On": "On",
+    "Off": "Off",
+    "Monday": "Monday",
+    "Tuesday": "Tuesday",
+    "Wednesday": "Wednesday",
+    "Thursday": "Thursday",
+    "Friday": "Friday",
+    "Saturday": "Saturday",
+    "Sunday": "Sunday",
+    "Extra slots": "Extra slots",
+    "Preview the pillbox fill for upcoming weeks (Mon–Sun).": "Preview the pillbox fill for upcoming weeks (Mon–Sun)."
 }
