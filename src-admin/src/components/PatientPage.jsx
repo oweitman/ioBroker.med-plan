@@ -17,6 +17,7 @@ import PatientPageAddMedication from './PatientPageAddMedication';
 import PatientPageMedicationCard from './PatientPageMedicationCard';
 import PatientPageIntakeHistory from './PatientPageIntakeHistory';
 import PatientRemindersCard from './PatientRemindersCard';
+import PillOrganizerSection from './PillOrganizerSection';
 
 /**
  * props:
@@ -719,7 +720,11 @@ export default function PatientPage(props) {
                     actions={actions}
                 />
             ))}
-
+            <PillOrganizerSection
+                classes={classes}
+                patient={patient}
+                medications={medications}
+            />
             <PatientPageIntakeHistory
                 classes={classes}
                 patient={patient}

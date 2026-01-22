@@ -151,7 +151,9 @@ Please refer to the [`dev-server` documentation](https://github.com/ioBroker/dev
 - ok, Im Bericht einen Eintrag/Fehleinnahme löschen + suche und filterung
 - ok, Im widget den aktuellen Einnahmeslot leuchtend markieren
 - ok, Im Day-widget navigationspfeile für nächster Tag/vorheriger Tag
-- ok,wenn Medikament aus der generellen Liste wie auch aus dem Plan gelöscht wird, werden auch die zugehörigen Einnahmezeiten - Calculate dose reliability
+- ok,wenn Medikament aus der generellen Liste wie auch aus dem Plan gelöscht wird, werden auch die zugehörigen Einnahmezeiten
+- ok, Bestückungsplan für eine Woche.
+- Calculate dose reliability
 - Re-order reminder function
 - More options for intake schedule
 - Optional expansion of medication tracking with detailed information
