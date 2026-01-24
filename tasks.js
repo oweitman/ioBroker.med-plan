@@ -19,6 +19,14 @@ function buildAdmin() {
 function cleanAdmin() {
     deleteFoldersRecursive(`${__dirname}/admin/custom`);
     deleteFoldersRecursive(`${__dirname}/src-admin/build`);
+    deleteFoldersRecursive(`${__dirname}/admin`, [
+        'med-plan.png',
+        '.json',
+        '.json5',
+        'custom',
+        'adapter-settings.js',
+        'med-plan.svg'
+    ]);
 }
 function copyAllAdminFiles() {
     copyFiles(['src-admin/build/assets/*.css', '!src-admin/build/assets/src_bootstrap_*.css'], 'admin/assets');
@@ -42,8 +50,8 @@ async function copyAllFiles() {
     );
 
     //await patchHtmlFile(`${__dirname}/src-admin/build/index.html`);
-    copyFileSync(`${__dirname}/src-admin/build/index.html`, `${__dirname}/admin/index_m.html`);
-    copyFileSync(`${__dirname}/src-admin/build/index.html`, `${__dirname}/admin/tab_m.html`);
+    copyFileSync(`${__dirname}/src-admin/build/index.html`, `${__dirname}/admin/tab.html`);
+    //copyFileSync(`${__dirname}/src-admin/build/index.html`, `${__dirname}/admin/tab_m.html`);
 }
 function patchFiles() {
     if (fs.existsSync(`${__dirname}/src/build/index.html`)) {
@@ -53,8 +61,8 @@ function patchFiles() {
             `<script type="text/javascript" src="./../../lib/js/socket.io.js"></script>`,
         );
 
-        fs.existsSync(`${__dirname}/admin/tab_m.html`) && fs.unlinkSync(`${__dirname}/admin/tab_m.html`);
-        fs.writeFileSync(`${__dirname}/admin/tab_m.html`, code);
+        fs.existsSync(`${__dirname}/admin/tab.html`) && fs.unlinkSync(`${__dirname}/admin/tab.html`);
+        fs.writeFileSync(`${__dirname}/admin/tab.html`, code);
     }
 }
 function clean() {
@@ -73,6 +81,7 @@ function clean() {
         'tab_m.css',
         'tab_m.html',
         'tab_m.js',
+        'tab.html',
         'words.js',
         'translations.json',
         'i18n',
@@ -121,11 +130,11 @@ if (process.argv.includes('--admin-0-clean')) {
 } else {
     cleanAdmin();
     npmInstall(`${__dirname}/src-admin/`)
+        .then(() => cleanAdmin())
         .then(() => buildAdmin())
         .then(() => copyAllAdminFiles())
         .then(() => copyAllFiles())
         .then(() => patchFiles())
-        .then(() => clean())
         .then(() => {
             if (!fs.existsSync(`${__dirname}/src/node_modules`)) {
                 return npmInstall(`${__dirname}/src/`);
